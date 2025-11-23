@@ -1,13 +1,14 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { LayoutGrid, ClipboardList, LogOut, BookOpen } from 'lucide-react';
+import { LayoutGrid, ClipboardList, LogOut, BookOpen, Bell } from 'lucide-react'; // Import Bell
 
 const Sidebar = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const user = JSON.parse(localStorage.getItem('user'));
 
-    const MenuItem = ({ icon: Icon, label, path }) => {
+    // Tambah props 'badge'
+    const MenuItem = ({ icon: Icon, label, path, badge }) => {
         const active = location.pathname === path;
         return (
             <div 
@@ -18,18 +19,24 @@ const Sidebar = () => {
                     cursor: 'pointer', transition: '0.2s',
                     backgroundColor: active ? '#f0f9ff' : 'transparent',
                     color: active ? '#0284c7' : '#64748b',
-                    fontWeight: active ? 600 : 500
+                    fontWeight: active ? 600 : 500,
+                    position: 'relative' // Untuk badge
                 }}
             >
                 <Icon size={20} />
-                <span>{label}</span>
+                <span style={{flex: 1}}>{label}</span>
+                {/* Badge Merah jika ada */}
+                {badge && (
+                    <span style={{background: '#ef4444', color: 'white', fontSize: '0.7rem', padding: '2px 6px', borderRadius: '10px', fontWeight: 700}}>
+                        {badge}
+                    </span>
+                )}
             </div>
         );
     };
 
     return (
         <div className="sidebar-container">
-            {/* HEADER SIDEBAR */}
             <div style={{padding: '24px', display: 'flex', alignItems: 'center', gap: '12px', borderBottom: '1px solid #e2e8f0'}}>
                 <div style={{background: '#0284c7', padding: 8, borderRadius: 8, color: 'white'}}>
                     <BookOpen size={24} />
@@ -40,14 +47,15 @@ const Sidebar = () => {
                 </div>
             </div>
 
-            {/* MENU ITEMS */}
             <div style={{flex: 1, padding: '16px 0'}}>
                 <div style={{padding: '0 20px 10px', fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8'}}>MENU</div>
                 <MenuItem icon={LayoutGrid} label="Daftar Ruangan" path="/dashboard" />
                 <MenuItem icon={ClipboardList} label="Status Peminjaman" path="/riwayat" />
+                
+                {/* MENU BARU: NOTIFIKASI */}
+                <MenuItem icon={Bell} label="Notifikasi" path="/notifikasi" badge="1" /> 
             </div>
 
-            {/* FOOTER / USER PROFILE */}
             <div style={{padding: '20px', borderTop: '1px solid #e2e8f0', backgroundColor: '#f8fafc'}}>
                 <div style={{display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px'}}>
                     <div style={{width: 36, height: 36, background: '#cbd5e1', borderRadius: '50%', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:'bold', color:'#475569'}}>
@@ -58,13 +66,7 @@ const Sidebar = () => {
                         <p style={{margin: 0, fontSize: '0.75rem', color: '#64748b'}}>{user?.role}</p>
                     </div>
                 </div>
-                <button 
-                    onClick={() => {localStorage.clear(); navigate('/')}}
-                    style={{
-                        width: '100%', padding: '8px', background: 'white', border: '1px solid #e2e8f0',
-                        borderRadius: '6px', color: '#ef4444', fontWeight: 600, cursor: 'pointer', fontSize: '0.85rem'
-                    }}
-                >
+                <button onClick={() => {localStorage.clear(); navigate('/')}} style={{width: '100%', padding: '8px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '6px', color: '#ef4444', fontWeight: 600, cursor: 'pointer', fontSize: '0.85rem'}}>
                     Logout
                 </button>
             </div>
