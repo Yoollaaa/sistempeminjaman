@@ -1,100 +1,239 @@
 import React, { useState } from 'react';
 import Sidebar from '../components/Sidebar';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, MapPin, Users, Search, ArrowRight } from 'lucide-react';
+import { Calendar, Clock, MapPin, Bell, ChevronRight, AlertCircle, BookOpen, CheckCircle, X, Info, Check } from 'lucide-react';
 
 const Dashboard = () => {
     const navigate = useNavigate();
-    const user = JSON.parse(localStorage.getItem('user')) || { nama: 'User' };
-    const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+    const user = JSON.parse(localStorage.getItem('user')) || { nama: 'Mahasiswa' };
+    
+    // STATE untuk Pop-up Notifikasi
+    const [showNotif, setShowNotif] = useState(false);
 
-    // DATA RUANGAN SESUAI REQUEST
-    const rooms = [
-        { 
-            id: 1, kode: 'H5', nama: 'Lab Sistem Kendali', kapasitas: 40, 
-            lokasi: 'Gedung H Lantai 1', status: 'Tersedia',
-            img: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=600&q=80' 
-        },
-        { 
-            id: 2, kode: 'H20', nama: 'Ruang Kuliah Teori', kapasitas: 60, 
-            lokasi: 'Gedung H Lantai 2', status: 'Digunakan',
-            img: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&q=80' 
-        },
-        { 
-            id: 3, kode: 'H19', nama: 'Lab Jaringan Komputer', kapasitas: 30, 
-            lokasi: 'Gedung H Lantai 2', status: 'Tersedia',
-            img: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=600&q=80'
-        },
-        { 
-            id: 4, kode: 'H3', nama: 'Ruang Sidang', kapasitas: 15, 
-            lokasi: 'Gedung H Lantai 1', status: 'Tersedia',
-            img: 'https://images.unsplash.com/photo-1497215728101-856f4ea42174?w=600&q=80'
-        }
+    const today = new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+    // DATA DUMMY NOTIFIKASI
+    const notifications = [
+        { id: 1, title: 'Disetujui', msg: 'Pengajuan H5 (25 Nov) disetujui Kajur.', time: 'Baru saja', type: 'success' },
+        { id: 2, title: 'Verifikasi Admin', msg: 'Pengajuan H20 sedang diperiksa.', time: '2 jam lalu', type: 'info' },
+        { id: 3, title: 'Info Kampus', msg: 'Pemadaman listrik di Gedung H19.', time: 'Kemarin', type: 'warning' },
     ];
+
+    // Helper Icon
+    const getNotifIcon = (type) => {
+        if(type === 'success') return <div style={{background:'#dcfce7', padding:8, borderRadius:'50%', color:'#166534'}}><Check size={16}/></div>;
+        if(type === 'warning') return <div style={{background:'#fef9c3', padding:8, borderRadius:'50%', color:'#854d0e'}}><AlertCircle size={16}/></div>;
+        return <div style={{background:'#dbeafe', padding:8, borderRadius:'50%', color:'#1e40af'}}><Info size={16}/></div>;
+    };
 
     return (
         <div className="app-layout">
             <Sidebar />
             <div className="content-container">
                 
-                {/* HEADER */}
-                <div style={{marginBottom: 30}}>
-                    <h1 style={{fontSize: '1.8rem', margin: '0 0 5px 0', color: '#0f172a'}}>Pilih Ruangan</h1>
-                    <p style={{color: '#64748b', margin: 0}}>Halo <b>{user.nama}</b>, silakan pilih ruangan untuk kegiatan akademik.</p>
+                {/* HEADER SECTION (MODIFIKASI DI SINI) */}
+                <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom: 30}}>
+                    
+                    {/* Sapaan Kiri */}
+                    <div>
+                        <h1 style={{fontSize:'1.8rem', fontWeight:800, color:'#0f172a', margin:'0 0 5px 0'}}>
+                            Selamat Pagi, {user.nama.split(' ')[0]}!
+                        </h1>
+                        <p style={{color:'#64748b', margin:0, fontSize:'1rem'}}>
+                            Berikut ringkasan aktivitas peminjaman ruangan Anda.
+                        </p>
+                    </div>
+
+                    {/* Area Kanan: Tanggal & Lonceng */}
+                    <div style={{display:'flex', alignItems:'center', gap: 15}}>
+                        
+                        {/* 1. Tanggal */}
+                        <div style={{display:'flex', alignItems:'center', gap:8, color:'#64748b', fontSize:'0.9rem', background:'white', padding:'10px 16px', borderRadius:50, border:'1px solid #e2e8f0'}}>
+                            <Calendar size={18} color="#0284c7"/>
+                            <span style={{fontWeight:600, color:'#0f172a'}}>{today}</span>
+                        </div>
+
+                        {/* 2. Lonceng Notifikasi (Interaktif) */}
+                        <div style={{position: 'relative'}}>
+                            <button 
+                                onClick={() => setShowNotif(!showNotif)}
+                                style={{
+                                    background: showNotif ? '#e0f2fe' : 'white', 
+                                    border: '1px solid #e2e8f0', borderRadius: '50%', width: 45, height: 45, 
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                                    transition: '0.2s', position: 'relative'
+                                }}
+                            >
+                                <Bell size={20} color={showNotif ? '#0284c7' : '#64748b'} />
+                                {/* Badge Merah */}
+                                <span style={{position:'absolute', top:-2, right:-2, background:'#ef4444', color:'white', fontSize:'0.7rem', fontWeight:700, width:18, height:18, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', border:'2px solid #f8fafc'}}>
+                                    {notifications.length}
+                                </span>
+                            </button>
+
+                            {/* DROPDOWN MENU */}
+                            {showNotif && (
+                                <div style={{
+                                    position: 'absolute', top: '120%', right: 0, width: 320,
+                                    background: 'white', borderRadius: 12, border: '1px solid #e2e8f0',
+                                    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
+                                    zIndex: 100, overflow: 'hidden'
+                                }}>
+                                    <div style={{padding: '12px 16px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                                        <h3 style={{margin: 0, fontSize: '0.9rem', color: '#0f172a'}}>Notifikasi</h3>
+                                        <button onClick={() => setShowNotif(false)} style={{background:'none', border:'none', cursor:'pointer', color:'#94a3b8'}}><X size={16}/></button>
+                                    </div>
+                                    
+                                    <div style={{maxHeight: 300, overflowY: 'auto'}}>
+                                        {notifications.map((item) => (
+                                            <div key={item.id} style={{padding: '12px 16px', borderBottom: '1px solid #f8fafc', display: 'flex', gap: 12, cursor: 'pointer', transition: '0.2s'}} onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'} onMouseLeave={(e) => e.currentTarget.style.background = 'white'}>
+                                                <div style={{marginTop: 2}}>{getNotifIcon(item.type)}</div>
+                                                <div>
+                                                    <h4 style={{margin: 0, fontSize: '0.85rem', color: '#334155'}}>{item.title}</h4>
+                                                    <p style={{margin: '2px 0', fontSize: '0.75rem', color: '#64748b', lineHeight: 1.3}}>{item.msg}</p>
+                                                    <span style={{fontSize: '0.7rem', color: '#94a3b8'}}>{item.time}</span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div style={{padding: '10px', textAlign: 'center', background:'#f8fafc', borderTop:'1px solid #e2e8f0'}}>
+                                        <span style={{fontSize:'0.8rem', color:'#0284c7', fontWeight:600, cursor:'pointer'}}>Tandai Semua Dibaca</span>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                    </div>
                 </div>
 
-                {/* FILTER BAR */}
-                <div className="card" style={{padding: 20, marginBottom: 30, display:'flex', alignItems:'center', gap: 20, borderRadius:12}}>
-                    <div style={{flex:1}}>
-                        <label style={{fontSize:'0.75rem', fontWeight:700, color:'#64748b', display:'block', marginBottom:5}}>TANGGAL KEGIATAN</label>
-                        <div style={{display:'flex', alignItems:'center', gap:10, background:'#f8fafc', padding:'8px 12px', borderRadius:8, border:'1px solid #e2e8f0'}}>
-                            <Calendar color="#0284c7" size={20} />
-                            <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} 
-                                style={{border:'none', background:'transparent', fontSize:'0.95rem', fontWeight:600, color:'#0f172a', outline:'none', width:'100%'}} />
-                        </div>
-                    </div>
-                    <div style={{width:1, height:40, background:'#e2e8f0'}}></div>
-                    <div style={{flex:1}}>
-                        <label style={{fontSize:'0.75rem', fontWeight:700, color:'#64748b', display:'block', marginBottom:5}}>CARI RUANGAN</label>
-                        <div style={{display:'flex', alignItems:'center', gap:10, background:'#f8fafc', padding:'8px 12px', borderRadius:8, border:'1px solid #e2e8f0'}}>
-                            <Search color="#94a3b8" size={20} />
-                            <input type="text" placeholder="Contoh: H5..." style={{border:'none', background:'transparent', fontSize:'0.95rem', outline:'none', width:'100%'}} />
-                        </div>
-                    </div>
-                </div>
-
-                {/* GRID RUANGAN */}
-                <h3 style={{marginBottom: 20, color: '#334155'}}>Daftar Ruangan Gedung H</h3>
-                <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 24}}>
-                    {rooms.map((room) => (
-                        <div key={room.id} className="card" style={{overflow:'hidden', display:'flex', flexDirection:'column', transition:'0.2s'}}>
-                            <div style={{height: 150, position:'relative'}}>
-                                <img src={room.img} style={{width:'100%', height:'100%', objectFit:'cover'}} />
-                                <div style={{position:'absolute', top:10, right:10}}>
-                                    <span className={`badge ${room.status === 'Tersedia' ? 'ok' : 'no'}`}>{room.status}</span>
+                {/* MAIN GRID LAYOUT (SESUAI PERMINTAAN) */}
+                <div style={{display: 'grid', gridTemplateColumns: '2.5fr 1fr', gap: 30}}>
+                    
+                    {/* KOLOM KIRI */}
+                    <div style={{display:'flex', flexDirection:'column', gap: 24}}>
+                        
+                        {/* 1. STATUS CARD (HERO) */}
+                        <div className="card" style={{padding: 24, background: 'linear-gradient(to right, #0284c7, #0ea5e9)', color:'white', border:'none', position:'relative', overflow:'hidden'}}>
+                            <div style={{position:'relative', zIndex:2}}>
+                                <div style={{display:'flex', alignItems:'center', gap:10, marginBottom:15}}>
+                                    <div style={{background:'rgba(255,255,255,0.2)', padding:6, borderRadius:'50%'}}><Bell size={20} color="white"/></div>
+                                    <span style={{fontSize:'0.85rem', fontWeight:600, letterSpacing:0.5, opacity:0.9}}>UPDATE TERAKHIR</span>
                                 </div>
-                                <div style={{position:'absolute', bottom:10, left:10, background:'rgba(255,255,255,0.9)', padding:'4px 10px', borderRadius:6, fontWeight:700, fontSize:'0.8rem', color:'#0284c7'}}>
-                                    Gedung {room.kode}
-                                </div>
-                            </div>
-                            
-                            <div style={{padding: 20, flex:1, display:'flex', flexDirection:'column'}}>
-                                <h3 style={{margin:'0 0 5px 0', fontSize:'1.2rem', color:'#0f172a'}}>{room.nama}</h3>
-                                <div style={{display:'flex', gap:15, fontSize:'0.85rem', color:'#64748b', marginBottom: 20}}>
-                                    <span style={{display:'flex', alignItems:'center', gap:4}}><Users size={14}/> {room.kapasitas}</span>
-                                    <span style={{display:'flex', alignItems:'center', gap:4}}><MapPin size={14}/> {room.lokasi}</span>
-                                </div>
-                                
-                                <button 
-                                    className="btn-primary" style={{marginTop:'auto', width:'100%'}}
-                                    disabled={room.status !== 'Tersedia'}
-                                    onClick={() => navigate('/ajukan', {state: {namaRuangan: `Gedung ${room.kode} - ${room.nama}`, tanggal: selectedDate}})}
-                                >
-                                    {room.status === 'Tersedia' ? 'Ajukan Pinjam' : 'Tidak Tersedia'}
+                                <h2 style={{margin:'0 0 10px 0', fontSize:'1.6rem'}}>Peminjaman H5 Disetujui</h2>
+                                <p style={{opacity:0.9, marginBottom:20, maxWidth:'80%', lineHeight:1.5}}>
+                                    Permohonan peminjaman ruangan Lab Sistem Kendali untuk tanggal 25 Nov telah disetujui oleh Ketua Jurusan.
+                                </p>
+                                <button onClick={() => navigate('/riwayat')} style={{background:'white', color:'#0284c7', border:'none', padding:'10px 20px', borderRadius:8, fontWeight:700, cursor:'pointer'}}>
+                                    Cek Status Pengajuan
                                 </button>
                             </div>
+                            <div style={{position:'absolute', right:-20, bottom:-20, opacity:0.1}}>
+                                <BookOpen size={200} color="white"/>
+                            </div>
                         </div>
-                    ))}
+
+                        {/* 2. JADWAL PEMINJAMAN (Timeline) */}
+                        <div>
+                            <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:15}}>
+                                <h3 style={{margin:0, color:'#334155'}}>Jadwal Peminjaman Anda</h3>
+                                <button onClick={() => navigate('/riwayat')} style={{background:'none', border:'none', color:'#0284c7', fontWeight:600, cursor:'pointer', display:'flex', alignItems:'center', gap:4, fontSize:'0.9rem'}}>
+                                    Lihat Semua <ChevronRight size={16}/>
+                                </button>
+                            </div>
+
+                            <div className="card" style={{padding:0}}>
+                                {/* Item 1 */}
+                                <div style={{display:'flex', padding: 20, borderBottom:'1px solid #f1f5f9', gap: 20, alignItems:'center'}}>
+                                    <div style={{textAlign:'center', minWidth: 60}}>
+                                        <span style={{display:'block', fontSize:'0.8rem', fontWeight:700, color:'#94a3b8'}}>NOV</span>
+                                        <span style={{display:'block', fontSize:'1.5rem', fontWeight:700, color:'#0284c7'}}>25</span>
+                                    </div>
+                                    <div style={{flex:1}}>
+                                        <div style={{display:'flex', alignItems:'center', gap:10, marginBottom:5}}>
+                                            <span style={{background:'#dcfce7', color:'#166534', fontSize:'0.7rem', fontWeight:700, padding:'2px 8px', borderRadius:4}}>DISETUJUI</span>
+                                            <span style={{fontSize:'0.85rem', color:'#64748b', display:'flex', alignItems:'center', gap:4}}><Clock size={14}/> 08:00 - 10:00</span>
+                                        </div>
+                                        <h4 style={{margin:0, fontSize:'1.1rem', color:'#0f172a'}}>Kelas Pengganti Sistem Kendali</h4>
+                                        <p style={{margin:'4px 0 0 0', color:'#64748b', fontSize:'0.9rem', display:'flex', alignItems:'center', gap:5}}>
+                                            <MapPin size={14}/> Gedung H5 - Lantai 1
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {/* Item 2 */}
+                                <div style={{display:'flex', padding: 20, gap: 20, alignItems:'center'}}>
+                                    <div style={{textAlign:'center', minWidth: 60}}>
+                                        <span style={{display:'block', fontSize:'0.8rem', fontWeight:700, color:'#94a3b8'}}>DES</span>
+                                        <span style={{display:'block', fontSize:'1.5rem', fontWeight:700, color:'#0f172a'}}>01</span>
+                                    </div>
+                                    <div style={{flex:1}}>
+                                        <div style={{display:'flex', alignItems:'center', gap:10, marginBottom:5}}>
+                                            <span style={{background:'#fef9c3', color:'#854d0e', fontSize:'0.7rem', fontWeight:700, padding:'2px 8px', borderRadius:4}}>MENUNGGU</span>
+                                            <span style={{fontSize:'0.85rem', color:'#64748b', display:'flex', alignItems:'center', gap:4}}><Clock size={14}/> 13:00 - 15:00</span>
+                                        </div>
+                                        <h4 style={{margin:0, fontSize:'1.1rem', color:'#0f172a'}}>Seminar Proposal Skripsi</h4>
+                                        <p style={{margin:'4px 0 0 0', color:'#64748b', fontSize:'0.9rem', display:'flex', alignItems:'center', gap:5}}>
+                                            <MapPin size={14}/> Gedung H20 - Lantai 2
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* KOLOM KANAN */}
+                    <div style={{display:'flex', flexDirection:'column', gap: 24}}>
+                        
+                        {/* Statistik */}
+                        <div className="card" style={{padding: 20}}>
+                            <h3 style={{margin:'0 0 15px 0', fontSize:'1rem', color:'#64748b', textTransform:'uppercase', letterSpacing:0.5}}>Statistik Semester Ini</h3>
+                            <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:15}}>
+                                <div>
+                                    <h2 style={{margin:0, fontSize:'2rem', color:'#0f172a'}}>12</h2>
+                                    <span style={{fontSize:'0.85rem', color:'#64748b'}}>Pengajuan</span>
+                                </div>
+                                <div style={{width:50, height:50, background:'#f0f9ff', borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', color:'#0284c7', fontWeight:800}}>85%</div>
+                            </div>
+                            <div style={{display:'flex', gap:5}}>
+                                <div style={{flex:1, height:6, background:'#e2e8f0', borderRadius:10, overflow:'hidden'}}>
+                                    <div style={{width:'70%', background:'#22c55e', height:'100%'}}></div>
+                                </div>
+                                <div style={{flex:1, height:6, background:'#e2e8f0', borderRadius:10, overflow:'hidden'}}>
+                                    <div style={{width:'30%', background:'#eab308', height:'100%'}}></div>
+                                </div>
+                            </div>
+                            <div style={{display:'flex', justifyContent:'space-between', marginTop:8, fontSize:'0.75rem', color:'#64748b'}}>
+                                <span style={{display:'flex', alignItems:'center', gap:4}}><span style={{width:6, height:6, background:'#22c55e', borderRadius:'50%'}}></span> Disetujui</span>
+                                <span style={{display:'flex', alignItems:'center', gap:4}}><span style={{width:6, height:6, background:'#eab308', borderRadius:'50%'}}></span> Proses</span>
+                            </div>
+                        </div>
+
+                        {/* Tombol Cepat */}
+                        <div className="card" style={{padding: 24, textAlign:'center', border:'1px dashed #cbd5e1', background:'transparent'}}>
+                            <h4 style={{margin:'0 0 10px 0', color:'#0f172a'}}>Ingin Pinjam Ruangan?</h4>
+                            <p style={{fontSize:'0.9rem', color:'#64748b', marginBottom:20}}>Cek ketersediaan ruangan di Gedung H secara real-time.</p>
+                            <button 
+                                onClick={() => navigate('/pilih-ruangan')}
+                                className="btn-primary"
+                            >
+                                + Buat Pengajuan Baru
+                            </button>
+                        </div>
+
+                        {/* Info Akademik */}
+                        <div className="card" style={{padding: 20, background:'#fffbeb', border:'1px solid #fde68a'}}>
+                            <div style={{display:'flex', gap:10}}>
+                                <AlertCircle size={20} color="#d97706" style={{minWidth:20}}/>
+                                <div>
+                                    <h4 style={{margin:'0 0 5px 0', color:'#92400e', fontSize:'0.95rem'}}>Info Pemeliharaan</h4>
+                                    <p style={{margin:0, fontSize:'0.85rem', color:'#b45309', lineHeight:1.4}}>
+                                        Gedung H19 akan mengalami pemadaman listrik pada Sabtu, 30 Nov.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
                 </div>
 
             </div>
