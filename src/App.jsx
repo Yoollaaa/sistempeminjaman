@@ -5,12 +5,14 @@ import Dashboard from './pages/Dashboard';
 import PilihRuangan from './pages/PilihRuangan';
 import FormPeminjaman from './pages/FormPeminjaman';
 import Riwayat from './pages/Riwayat';
+import Register from './pages/Register'; // Import Baru
 
 function App() {
   return (
     <Router>
       <Routes>
         <Route path="/" element={<Login />} />
+        <Route path="/register" element={<Register />} /> {/* <--- RUTE BARU */}
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/pilih-ruangan" element={<PilihRuangan />} />
         <Route path="/ajukan" element={<FormPeminjaman />} />
