@@ -1,25 +1,42 @@
-import React, { useState } from 'react';
+import React, { useState } from 'react'; // Tambahkan useState
 import Sidebar from '../components/Sidebar';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, Clock, MapPin, Bell, ChevronRight, AlertCircle, BookOpen, CheckCircle, X, Info, Check } from 'lucide-react';
+// Tambahkan Icon yang dibutuhkan
+import { 
+    Calendar, Clock, MapPin, ChevronRight, AlertCircle, 
+    BookOpen, CheckCircle, X, Info, Check, Bell, TrendingUp // <--- TAMBAHKAN BELL, X, INFO DI SINI
+} from 'lucide-react';
 
 const Dashboard = () => {
     const navigate = useNavigate();
-    const user = JSON.parse(localStorage.getItem('user')) || { nama: 'Mahasiswa' };
+    const user = JSON.parse(localStorage.getItem('user')) || { nama: 'Mahasiswa', role: 'User' };
     
     // STATE untuk Pop-up Notifikasi
-    const [showNotif, setShowNotif] = useState(false);
-
+    const [showNotif, setShowNotif] = useState(false); // <--- BARU
+    
     const today = new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
-    // DATA DUMMY NOTIFIKASI
+    // Data Notifikasi (BARU)
     const notifications = [
         { id: 1, title: 'Disetujui', msg: 'Pengajuan H5 (25 Nov) disetujui Kajur.', time: 'Baru saja', type: 'success' },
         { id: 2, title: 'Verifikasi Admin', msg: 'Pengajuan H20 sedang diperiksa.', time: '2 jam lalu', type: 'info' },
         { id: 3, title: 'Info Kampus', msg: 'Pemadaman listrik di Gedung H19.', time: 'Kemarin', type: 'warning' },
     ];
 
-    // Helper Icon
+    // Data Statistik
+    const stats = [
+        { title: 'Total Pengajuan', value: '12', icon: <TrendingUp size={22}/>, color: '#0ea5e9', bg: '#e0f2fe' },
+        { title: 'Menunggu', value: '2', icon: <Clock size={22}/>, color: '#f59e0b', bg: '#fef3c7' },
+        { title: 'Disetujui', value: '8', icon: <CheckCircle size={22}/>, color: '#10b981', bg: '#dcfce7' },
+    ];
+
+    // Data Jadwal
+    const upcoming = [
+        { id: 1, room: 'Gedung H5', date: '25 Nov', time: '08:00 - 10:00', title: 'Kelas Pengganti Sistem Kendali' },
+        { id: 2, room: 'Gedung H20', date: '01 Des', time: '13:00 - 15:00', title: 'Seminar Proposal Skripsi' },
+    ];
+
+    // Helper Icon Notifikasi
     const getNotifIcon = (type) => {
         if(type === 'success') return <div style={{background:'#dcfce7', padding:8, borderRadius:'50%', color:'#166534'}}><Check size={16}/></div>;
         if(type === 'warning') return <div style={{background:'#fef9c3', padding:8, borderRadius:'50%', color:'#854d0e'}}><AlertCircle size={16}/></div>;
@@ -32,7 +49,7 @@ const Dashboard = () => {
             <div className="content-container">
                 
                 {/* HEADER SECTION (MODIFIKASI DI SINI) */}
-                <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom: 30}}>
+                <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom: 30, position: 'relative'}}>
                     
                     {/* Sapaan Kiri */}
                     <div>
@@ -44,7 +61,7 @@ const Dashboard = () => {
                         </p>
                     </div>
 
-                    {/* Area Kanan: Tanggal & Lonceng */}
+                    {/* Area Kanan: Tanggal & Lonceng Interaktif */}
                     <div style={{display:'flex', alignItems:'center', gap: 15}}>
                         
                         {/* 1. Tanggal */}
@@ -56,7 +73,7 @@ const Dashboard = () => {
                         {/* 2. Lonceng Notifikasi (Interaktif) */}
                         <div style={{position: 'relative'}}>
                             <button 
-                                onClick={() => setShowNotif(!showNotif)}
+                                onClick={() => setShowNotif(!showNotif)} // <--- TOGGLE DROPDOWN
                                 style={{
                                     background: showNotif ? '#e0f2fe' : 'white', 
                                     border: '1px solid #e2e8f0', borderRadius: '50%', width: 45, height: 45, 
@@ -65,13 +82,17 @@ const Dashboard = () => {
                                 }}
                             >
                                 <Bell size={20} color={showNotif ? '#0284c7' : '#64748b'} />
-                                {/* Badge Merah */}
-                                <span style={{position:'absolute', top:-2, right:-2, background:'#ef4444', color:'white', fontSize:'0.7rem', fontWeight:700, width:18, height:18, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', border:'2px solid #f8fafc'}}>
+                                {/* Badge Merah (Jumlah) */}
+                                <span style={{
+                                    position:'absolute', top:-2, right:-2, background:'#ef4444', color:'white', 
+                                    fontSize:'0.7rem', fontWeight:700, width:18, height:18, borderRadius:'50%', 
+                                    display:'flex', alignItems:'center', justifyContent:'center', border:'2px solid #f8fafc'
+                                }}>
                                     {notifications.length}
                                 </span>
                             </button>
 
-                            {/* DROPDOWN MENU */}
+                            {/* DROPDOWN MENU NOTIFIKASI */}
                             {showNotif && (
                                 <div style={{
                                     position: 'absolute', top: '120%', right: 0, width: 320,
@@ -90,26 +111,26 @@ const Dashboard = () => {
                                                 <div style={{marginTop: 2}}>{getNotifIcon(item.type)}</div>
                                                 <div>
                                                     <h4 style={{margin: 0, fontSize: '0.85rem', color: '#334155'}}>{item.title}</h4>
-                                                    <p style={{margin: '2px 0', fontSize: '0.75rem', color: '#64748b', lineHeight: 1.3}}>{item.msg}</p>
+                                                    <p style={{margin: '2px 0', fontSize: '0.75rem', color: '#64748b', lineHeight: 1.4}}>{item.msg}</p>
                                                     <span style={{fontSize: '0.7rem', color: '#94a3b8'}}>{item.time}</span>
                                                 </div>
                                             </div>
                                         ))}
                                     </div>
-                                    <div style={{padding: '10px', textAlign: 'center', background:'#f8fafc', borderTop:'1px solid #e2e8f0'}}>
+
+                                    <div style={{padding: '10px', textAlign: 'center', background:'#f8fafc', borderTop:'1px solid #f1f5f9'}}>
                                         <span style={{fontSize:'0.8rem', color:'#0284c7', fontWeight:600, cursor:'pointer'}}>Tandai Semua Dibaca</span>
                                     </div>
                                 </div>
                             )}
                         </div>
-
                     </div>
                 </div>
 
-                {/* MAIN GRID LAYOUT (SESUAI PERMINTAAN) */}
+                {/* MAIN DASHBOARD CONTENT */}
                 <div style={{display: 'grid', gridTemplateColumns: '2.5fr 1fr', gap: 30}}>
                     
-                    {/* KOLOM KIRI */}
+                    {/* KOLOM KIRI (Jadwal & Status) */}
                     <div style={{display:'flex', flexDirection:'column', gap: 24}}>
                         
                         {/* 1. STATUS CARD (HERO) */}
@@ -181,34 +202,35 @@ const Dashboard = () => {
                         </div>
                     </div>
 
-                    {/* KOLOM KANAN */}
+                    {/* KOLOM KANAN (WIDGETS) */}
                     <div style={{display:'flex', flexDirection:'column', gap: 24}}>
                         
-                        {/* Statistik */}
-                        <div className="card" style={{padding: 20}}>
-                            <h3 style={{margin:'0 0 15px 0', fontSize:'1rem', color:'#64748b', textTransform:'uppercase', letterSpacing:0.5}}>Statistik Semester Ini</h3>
-                            <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:15}}>
-                                <div>
-                                    <h2 style={{margin:0, fontSize:'2rem', color:'#0f172a'}}>12</h2>
-                                    <span style={{fontSize:'0.85rem', color:'#64748b'}}>Pengajuan</span>
-                                </div>
-                                <div style={{width:50, height:50, background:'#f0f9ff', borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', color:'#0284c7', fontWeight:800}}>85%</div>
+                        {/* WIDGET 1: STATISTIK (HANYA UNTUK KONTEN GRID) */}
+                        {/* WIDGET INI DILUAR BLOK STATS DARI KODE ASLI USER */}
+                        
+                        {/* WIDGET 2: NOTIFIKASI */}
+                        <div className="card" style={{padding: '24px'}}>
+                            <h3 style={{margin: '0 0 20px 0', color: '#0f172a', fontSize:'1.1rem'}}>Pemberitahuan</h3>
+                            
+                            <div style={{display:'flex', flexDirection:'column', gap:15}}>
+                                {notifications.map((notif) => (
+                                    <div key={notif.id} style={{display:'flex', gap:12, paddingBottom: 12, borderBottom: '1px dashed #e2e8f0'}}>
+                                        <div style={{marginTop: 2}}>{getNotifIcon(notif.type)}</div>
+                                        <div>
+                                            <h4 style={{margin:0, fontSize:'0.95rem', color:'#334155'}}>{notif.title}</h4>
+                                            <p style={{margin:'2px 0', fontSize:'0.85rem', color:'#64748b', lineHeight:1.4}}>{notif.msg}</p>
+                                            <span style={{fontSize:'0.75rem', color:'#94a3b8'}}>{notif.time}</span>
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
-                            <div style={{display:'flex', gap:5}}>
-                                <div style={{flex:1, height:6, background:'#e2e8f0', borderRadius:10, overflow:'hidden'}}>
-                                    <div style={{width:'70%', background:'#22c55e', height:'100%'}}></div>
-                                </div>
-                                <div style={{flex:1, height:6, background:'#e2e8f0', borderRadius:10, overflow:'hidden'}}>
-                                    <div style={{width:'30%', background:'#eab308', height:'100%'}}></div>
-                                </div>
-                            </div>
-                            <div style={{display:'flex', justifyContent:'space-between', marginTop:8, fontSize:'0.75rem', color:'#64748b'}}>
-                                <span style={{display:'flex', alignItems:'center', gap:4}}><span style={{width:6, height:6, background:'#22c55e', borderRadius:'50%'}}></span> Disetujui</span>
-                                <span style={{display:'flex', alignItems:'center', gap:4}}><span style={{width:6, height:6, background:'#eab308', borderRadius:'50%'}}></span> Proses</span>
-                            </div>
-                        </div>
 
-                        {/* Tombol Cepat */}
+                            <button style={{width:'100%', marginTop:20, padding:10, background:'none', border:'none', color:'#0284c7', fontSize:'0.85rem', fontWeight:600, cursor:'pointer'}}>
+                                Tandai Semua Dibaca
+                            </button>
+                        </div>
+                        
+                        {/* WIDGET 3: TOMBOL CEPAT */}
                         <div className="card" style={{padding: 24, textAlign:'center', border:'1px dashed #cbd5e1', background:'transparent'}}>
                             <h4 style={{margin:'0 0 10px 0', color:'#0f172a'}}>Ingin Pinjam Ruangan?</h4>
                             <p style={{fontSize:'0.9rem', color:'#64748b', marginBottom:20}}>Cek ketersediaan ruangan di Gedung H secara real-time.</p>
@@ -219,8 +241,8 @@ const Dashboard = () => {
                                 + Buat Pengajuan Baru
                             </button>
                         </div>
-
-                        {/* Info Akademik */}
+                        
+                        {/* WIDGET 4: INFO AKADEMIK */}
                         <div className="card" style={{padding: 20, background:'#fffbeb', border:'1px solid #fde68a'}}>
                             <div style={{display:'flex', gap:10}}>
                                 <AlertCircle size={20} color="#d97706" style={{minWidth:20}}/>
