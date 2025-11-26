@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\RuanganController;
+use App\Http\Controllers\PeminjamanController; // Tambahkan import di atas
 
 // ------------------------------------------------------------------
 // 1. ROUTE PUBLIK (TIDAK PERLU TOKEN)
@@ -20,6 +21,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Ruangan
     Route::get('/ruangan', [RuanganController::class, 'index']); 
+
+    Route::post('/peminjaman', [PeminjamanController::class, 'store']); // <--- BARU
     
     // Nanti ditambahkan: POST /peminjaman, GET /peminjaman/riwayat
 });

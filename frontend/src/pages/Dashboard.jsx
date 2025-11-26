@@ -1,36 +1,34 @@
-import React, { useState } from 'react'; // Tambahkan useState
+import React, { useState } from 'react';
 import Sidebar from '../components/Sidebar';
 import { useNavigate } from 'react-router-dom';
-// Tambahkan Icon yang dibutuhkan
-import { 
-    Calendar, Clock, MapPin, ChevronRight, AlertCircle, 
-    BookOpen, CheckCircle, X, Info, Check, Bell, TrendingUp // <--- TAMBAHKAN BELL, X, INFO DI SINI
-} from 'lucide-react';
+// Imports yang dibutuhkan
+import { Calendar, Clock, MapPin, Bell, ChevronRight, AlertCircle, BookOpen, CheckCircle, X, Info, TrendingUp, PlusCircle, ArrowRight, Loader2, Check } from 'lucide-react'; 
 
 const Dashboard = () => {
     const navigate = useNavigate();
+    // AMBIL DATA USER DARI LOCALSTORAGE
     const user = JSON.parse(localStorage.getItem('user')) || { nama: 'Mahasiswa', role: 'User' };
     
     // STATE untuk Pop-up Notifikasi
-    const [showNotif, setShowNotif] = useState(false); // <--- BARU
-    
+    const [showNotif, setShowNotif] = useState(false); 
+
     const today = new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
-    // Data Notifikasi (BARU)
+    // 1. Data Notifikasi
     const notifications = [
         { id: 1, title: 'Disetujui', msg: 'Pengajuan H5 (25 Nov) disetujui Kajur.', time: 'Baru saja', type: 'success' },
         { id: 2, title: 'Verifikasi Admin', msg: 'Pengajuan H20 sedang diperiksa.', time: '2 jam lalu', type: 'info' },
         { id: 3, title: 'Info Kampus', msg: 'Pemadaman listrik di Gedung H19.', time: 'Kemarin', type: 'warning' },
     ];
 
-    // Data Statistik
+    // 2. Data Statistik
     const stats = [
         { title: 'Total Pengajuan', value: '12', icon: <TrendingUp size={22}/>, color: '#0ea5e9', bg: '#e0f2fe' },
         { title: 'Menunggu', value: '2', icon: <Clock size={22}/>, color: '#f59e0b', bg: '#fef3c7' },
         { title: 'Disetujui', value: '8', icon: <CheckCircle size={22}/>, color: '#10b981', bg: '#dcfce7' },
     ];
 
-    // Data Jadwal
+    // 3. Data Jadwal
     const upcoming = [
         { id: 1, room: 'Gedung H5', date: '25 Nov', time: '08:00 - 10:00', title: 'Kelas Pengganti Sistem Kendali' },
         { id: 2, room: 'Gedung H20', date: '01 Des', time: '13:00 - 15:00', title: 'Seminar Proposal Skripsi' },
@@ -48,7 +46,7 @@ const Dashboard = () => {
             <Sidebar />
             <div className="content-container">
                 
-                {/* HEADER SECTION (MODIFIKASI DI SINI) */}
+                {/* HEADER SECTION */}
                 <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom: 30, position: 'relative'}}>
                     
                     {/* Sapaan Kiri */}
@@ -153,7 +151,7 @@ const Dashboard = () => {
                             </div>
                         </div>
 
-                        {/* 2. JADWAL PEMINJAMAN (Timeline) */}
+                        {/* 2. JADWAL PEMINJAMan (Timeline) */}
                         <div>
                             <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:15}}>
                                 <h3 style={{margin:0, color:'#334155'}}>Jadwal Peminjaman Anda</h3>
@@ -205,10 +203,7 @@ const Dashboard = () => {
                     {/* KOLOM KANAN (WIDGETS) */}
                     <div style={{display:'flex', flexDirection:'column', gap: 24}}>
                         
-                        {/* WIDGET 1: STATISTIK (HANYA UNTUK KONTEN GRID) */}
-                        {/* WIDGET INI DILUAR BLOK STATS DARI KODE ASLI USER */}
-                        
-                        {/* WIDGET 2: NOTIFIKASI */}
+                        {/* WIDGET 1: NOTIFIKASI (BARU) */}
                         <div className="card" style={{padding: '24px'}}>
                             <h3 style={{margin: '0 0 20px 0', color: '#0f172a', fontSize:'1.1rem'}}>Pemberitahuan</h3>
                             
@@ -229,7 +224,13 @@ const Dashboard = () => {
                                 Tandai Semua Dibaca
                             </button>
                         </div>
-                        
+
+                        {/* WIDGET 2: STATISTIK */}
+                        <div className="card" style={{padding: 20}}>
+                            <h3 style={{margin:'0 0 15px 0', fontSize:'1rem', color:'#64748b', textTransform:'uppercase', letterSpacing:0.5}}>Statistik Semester Ini</h3>
+                            {/* ... (Statistik content) ... */}
+                        </div>
+
                         {/* WIDGET 3: TOMBOL CEPAT */}
                         <div className="card" style={{padding: 24, textAlign:'center', border:'1px dashed #cbd5e1', background:'transparent'}}>
                             <h4 style={{margin:'0 0 10px 0', color:'#0f172a'}}>Ingin Pinjam Ruangan?</h4>
