@@ -6,27 +6,42 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
+        // 1. TABEL USERS
         Schema::create('users', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
+            $table->bigIncrements('user_id'); // Primary Key Custom
+            $table->string('nama');           // Pakai 'nama' bukan 'name'
             $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->rememberToken();
+            $table->string('role')->default('mahasiswa');
+            $table->string('nim')->nullable();
+            $table->timestamps(); // Created_at & Updated_at
+        });
+
+        // 2. TABEL RUANGAN (Nama tabel 'ruangan' tanpa 's')
+        Schema::create('ruangan', function (Blueprint $table) {
+            $table->bigIncrements('ruangan_id'); // Primary Key Custom
+            $table->string('nama_ruangan');
+            $table->integer('kapasitas');
+            $table->string('lokasi');
+            $table->text('keterangan')->nullable();
+            // Tidak pakai timestamps ($table->timestamps()) sesuai request
+        });
+
+        // 3. TABEL PERSONAL ACCESS TOKENS (Wajib untuk Login API)
+        Schema::create('personal_access_tokens', function (Blueprint $table) {
+            $table->id();
+            $table->morphs('tokenable');
+            $table->string('name');
+            $table->string('token', 64)->unique();
+            $table->text('abilities')->nullable();
+            $table->timestamp('last_used_at')->nullable();
+            $table->timestamp('expires_at')->nullable();
             $table->timestamps();
         });
-
-        Schema::create('password_reset_tokens', function (Blueprint $table) {
-            $table->string('email')->primary();
-            $table->string('token');
-            $table->timestamp('created_at')->nullable();
-        });
-
+        
+        // 4. TABEL SESSIONS (Pendukung)
         Schema::create('sessions', function (Blueprint $table) {
             $table->string('id')->primary();
             $table->foreignId('user_id')->nullable()->index();
@@ -37,13 +52,11 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::dropIfExists('users');
-        Schema::dropIfExists('password_reset_tokens');
+        Schema::dropIfExists('personal_access_tokens');
         Schema::dropIfExists('sessions');
+        Schema::dropIfExists('ruangan');
+        Schema::dropIfExists('users');
     }
 };
