@@ -34,8 +34,15 @@ const Login = () => {
             localStorage.setItem('token', token);
             localStorage.setItem('user', JSON.stringify(userData)); 
 
-            // 3. Redirect ke Dashboard
-            navigate('/dashboard');
+            // 3. Stop loading, lalu redirect berdasarkan role
+            setLoading(false);
+            const roleRedirect = {
+                admin: '/admin',
+                mahasiswa: '/dashboard',
+                ketua_jurusan: '/dashboard/kajur'
+            };
+            const destination = roleRedirect[userData.role] || '/dashboard';
+            navigate(destination);
 
         } catch (err) {
             setLoading(false);

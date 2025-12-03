@@ -22,7 +22,13 @@ Route::middleware('auth:sanctum')->group(function () {
     // Ruangan
     Route::get('/ruangan', [RuanganController::class, 'index']); 
 
-    Route::post('/peminjaman', [PeminjamanController::class, 'store']); // <--- BARU
-    
-    // Nanti ditambahkan: POST /peminjaman, GET /peminjaman/riwayat
+    // Peminjaman
+    Route::get('/peminjaman', [PeminjamanController::class, 'index']); // list pengajuan (admin/kajur)
+    Route::post('/peminjaman', [PeminjamanController::class, 'store']); // buat pengajuan (mahasiswa)
+    Route::post('/peminjaman/{id}/approve', [PeminjamanController::class, 'approve']); // approve by admin
+    Route::post('/peminjaman/{id}/reject', [PeminjamanController::class, 'reject']); // reject by admin
+    Route::post('/peminjaman/{id}/approve-kajur', [PeminjamanController::class, 'approveKajur']); // approve by kajur
+    Route::post('/peminjaman/{id}/reject-kajur', [PeminjamanController::class, 'rejectKajur']); // reject by kajur
+
+    // Nanti ditambahkan: GET /peminjaman/riwayat
 });

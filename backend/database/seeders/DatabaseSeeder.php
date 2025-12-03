@@ -63,5 +63,8 @@ class DatabaseSeeder extends Seeder
                 'lokasi' => 'Gedung H Lantai 2',
             ]
         ]);
+
+        // 4. ISI DATA PEMINJAMAN (sample)
+        $this->call(PeminjamanSeeder::class);
     }
 }
