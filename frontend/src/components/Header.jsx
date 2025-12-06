@@ -65,21 +65,21 @@ const Header = () => {
   }
 
   return (
-    <header style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 20px', borderBottom: '1px solid #e6eef6', background: '#ffffff'}}>
+    <header style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px', borderBottom: '1px solid #e2e8f0', background: '#ffffff'}}>
       <div style={{display: 'flex', alignItems: 'center', gap: 12}}>
-        <Link to="/dashboard" style={{textDecoration: 'none', color: '#0f172a', fontWeight: 700, fontSize: '1rem'}}>Sistem Peminjaman</Link>
+        <Link to="/dashboard" style={{textDecoration: 'none', color: '#0f172a', fontWeight: 700, fontSize: '1.1rem', letterSpacing: '-0.5px'}}>Sistem Peminjaman</Link>
       </div>
 
-      <div style={{display: 'flex', alignItems: 'center', gap: 12}}>
+      <div style={{display: 'flex', alignItems: 'center', gap: 16}}>
         {user ? (
-          <>
-            <div style={{color: '#0f172a', fontSize: '0.95rem'}}>{user.nama} <span style={{color: '#64748b', fontWeight: 600}}>({user.role})</span></div>
-            <button onClick={handleLogout} disabled={loading} style={{padding: '8px 12px', background: loading ? '#fca5a5' : '#ef4444', color: 'white', border: 'none', borderRadius: 8, cursor: loading ? 'not-allowed' : 'pointer'}}>
-              {loading ? 'Logging out...' : 'Logout'}
-            </button>
-          </>
+          <div style={{display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', background: '#f8fafc', borderRadius: 8}}>
+            <div>
+              <div style={{color: '#0f172a', fontSize: '0.85rem', fontWeight: 600}}>{user.nama}</div>
+              <div style={{color: '#64748b', fontSize: '0.75rem'}}>{user.role}</div>
+            </div>
+          </div>
         ) : (
-          <Link to="/" style={{color: '#0284c7', fontWeight: 700}}>Login</Link>
+          <Link to="/" style={{color: 'var(--primary)', fontWeight: 600, fontSize: '0.95rem'}}>Login</Link>
         )}
         {message && (
           <Toast message={message} type={messageType} onClose={() => setMessage('')} />

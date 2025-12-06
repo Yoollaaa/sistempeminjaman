@@ -200,4 +200,124 @@ class PeminjamanController extends Controller
             'data' => $peminjaman
         ], 201);
     }
+
+    /**
+     * List pengajuan peminjaman mahasiswa yang sedang login
+     */
+    public function myPeminjaman(Request $request)
+    {
+        $mahasiswaId = Auth::user()->user_id;
+        
+        $query = Peminjaman::with(['mahasiswa', 'ruangan'])
+            ->where('mahasiswa_id', $mahasiswaId)
+            ->orderBy('tanggal_pinjam', 'desc')
+            ->orderBy('jam_mulai', 'asc');
+
+        // Filter by status if provided
+        if ($request->has('status') && $request->status) {
+            $query->where('status', $request->status);
+        }
+
+        $list = $query->get()->map(function ($p) {
+            return [
+                'id' => $p->id,
+                'mahasiswa_id' => $p->mahasiswa_id,
+                'nama_mahasiswa' => $p->mahasiswa->nama ?? '—',
+                'mahasiswa_email' => $p->mahasiswa->email ?? '—',
+                'ruangan_id' => $p->ruangan_id,
+                'nama_ruangan' => $p->ruangan->nama_ruangan ?? '—',
+                'tanggal_pinjam' => $p->tanggal_pinjam,
+                'jam_mulai' => $p->jam_mulai,
+                'jam_selesai' => $p->jam_selesai,
+                'keperluan' => $p->keperluan,
+                'status' => $p->status,
+                'catatan_admin' => $p->catatan_admin,
+                'catatan_kajur' => $p->catatan_kajur,
+                'created_at' => $p->created_at,
+            ];
+        });
+
+        return response()->json(['message' => 'Daftar peminjaman Anda', 'data' => $list], 200);
+    }
+
+    /**
+     * Statistik peminjaman untuk mahasiswa yang sedang login
+     */
+    public function statistics()
+    {
+        $mahasiswaId = Auth::user()->user_id;
+        
+        $peminjamanQuery = Peminjaman::where('mahasiswa_id', $mahasiswaId);
+        
+        $stats = [
+            'total' => $peminjamanQuery->count(),
+            'diajukan' => $peminjamanQuery->where('status', 'diajukan')->count(),
+            'disetujui_admin' => $peminjamanQuery->where('status', 'disetujui_admin')->count(),
+            'disetujui_kajur' => $peminjamanQuery->where('status', 'disetujui_kajur')->count(),
+            'ditolak_admin' => $peminjamanQuery->where('status', 'ditolak_admin')->count(),
+            'ditolak_kajur' => $peminjamanQuery->where('status', 'ditolak_kajur')->count(),
+        ];
+        
+        // Agregasi status
+        $stats['menunggu'] = $stats['diajukan'] + $stats['disetujui_admin'];
+        $stats['disetujui'] = $stats['disetujui_kajur'];
+        $stats['ditolak'] = $stats['ditolak_admin'] + $stats['ditolak_kajur'];
+
+        return response()->json(['message' => 'Statistik peminjaman', 'data' => $stats], 200);
+    }
+
+    /**
+     * Notifikasi untuk mahasiswa yang sedang login
+     * Menampilkan perubahan status terbaru
+     */
+    public function notifications()
+    {
+        $mahasiswaId = Auth::user()->user_id;
+        
+        // Ambil 5 pengajuan terbaru dengan status berubah
+        $peminjamanList = Peminjaman::with(['mahasiswa', 'ruangan'])
+            ->where('mahasiswa_id', $mahasiswaId)
+            ->orderBy('updated_at', 'desc')
+            ->limit(5)
+            ->get();
+        
+        $notifications = $peminjamanList->map(function ($p) {
+            // Mapping status ke notification type
+            $type = 'info';
+            $title = 'Update Status';
+            $message = 'Status pengajuan Anda telah diperbarui.';
+            
+            if ($p->status === 'disetujui_kajur') {
+                $type = 'success';
+                $title = 'Disetujui';
+                $message = 'Pengajuan peminjaman ' . $p->ruangan->nama_ruangan . ' telah disetujui oleh Ketua Jurusan.';
+            } elseif ($p->status === 'diajukan') {
+                $type = 'info';
+                $title = 'Verifikasi Admin';
+                $message = 'Pengajuan peminjaman ' . $p->ruangan->nama_ruangan . ' sedang diperiksa.';
+            } elseif ($p->status === 'disetujui_admin') {
+                $type = 'info';
+                $title = 'Diverifikasi Admin';
+                $message = 'Pengajuan peminjaman ' . $p->ruangan->nama_ruangan . ' telah diverifikasi admin, menunggu persetujuan Kajur.';
+            } elseif ($p->status === 'ditolak_admin' || $p->status === 'ditolak_kajur') {
+                $type = 'error';
+                $title = 'Ditolak';
+                $message = 'Pengajuan peminjaman ' . $p->ruangan->nama_ruangan . ' telah ditolak.';
+            }
+            
+            return [
+                'id' => $p->id,
+                'title' => $title,
+                'message' => $message,
+                'type' => $type,
+                'ruangan' => $p->ruangan->nama_ruangan ?? '—',
+                'tanggal_pinjam' => $p->tanggal_pinjam,
+                'created_at' => $p->created_at,
+                'updated_at' => $p->updated_at,
+                'status' => $p->status,
+            ];
+        });
+
+        return response()->json(['message' => 'Notifikasi peminjaman', 'data' => $notifications], 200);
+    }
 }
