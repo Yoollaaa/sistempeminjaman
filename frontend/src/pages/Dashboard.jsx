@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import { useNavigate } from 'react-router-dom';
 // Imports yang dibutuhkan
-import { Calendar, Clock, MapPin, Bell, ChevronRight, AlertCircle, BookOpen, CheckCircle, X, Info, TrendingUp, PlusCircle, ArrowRight, Loader2, Check } from 'lucide-react'; 
+import { Calendar, Clock, MapPin, Bell, ChevronRight, AlertCircle, BookOpen, CheckCircle, X, Info, TrendingUp, PlusCircle, ArrowRight, Loader2, Check } from 'lucide-react';
+import api from '../api';
 
 const Dashboard = () => {
     const navigate = useNavigate();
@@ -10,41 +11,164 @@ const Dashboard = () => {
     const user = JSON.parse(localStorage.getItem('user')) || { nama: 'Mahasiswa', role: 'User' };
     
     // STATE untuk Pop-up Notifikasi
-    const [showNotif, setShowNotif] = useState(false); 
+    const [showNotif, setShowNotif] = useState(false);
+    
+    // STATE untuk data dari API
+    const [notifications, setNotifications] = useState([]);
+    const [stats, setStats] = useState([]);
+    const [upcoming, setUpcoming] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     const today = new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
-    // 1. Data Notifikasi
-    const notifications = [
-        { id: 1, title: 'Disetujui', msg: 'Pengajuan H5 (25 Nov) disetujui Kajur.', time: 'Baru saja', type: 'success' },
-        { id: 2, title: 'Verifikasi Admin', msg: 'Pengajuan H20 sedang diperiksa.', time: '2 jam lalu', type: 'info' },
-        { id: 3, title: 'Info Kampus', msg: 'Pemadaman listrik di Gedung H19.', time: 'Kemarin', type: 'warning' },
-    ];
+    // FETCH DATA DARI API
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                setLoading(true);
+                setError(null);
+                
+                // Fetch semua data secara parallel
+                const [notifRes, statsRes, peminjamanRes] = await Promise.all([
+                    api.get('/peminjaman/notifications'),
+                    api.get('/peminjaman/statistics'),
+                    api.get('/peminjaman/my-peminjaman')
+                ]);
+                
+                // Transform notifications dari API format
+                const transformedNotifications = notifRes.data.data.map(notif => ({
+                    id: notif.id,
+                    title: notif.title,
+                    msg: notif.message,
+                    time: formatTime(notif.updated_at),
+                    type: notif.type
+                }));
+                
+                // Transform stats dari API format
+                const statsData = statsRes.data.data;
+                const transformedStats = [
+                    { 
+                        title: 'Total Pengajuan', 
+                        value: statsData.total.toString(), 
+                        icon: <TrendingUp size={22}/>, 
+                        color: '#0ea5e9', 
+                        bg: '#e0f2fe' 
+                    },
+                    { 
+                        title: 'Menunggu', 
+                        value: statsData.menunggu.toString(), 
+                        icon: <Clock size={22}/>, 
+                        color: '#f59e0b', 
+                        bg: '#fef3c7' 
+                    },
+                    { 
+                        title: 'Disetujui', 
+                        value: statsData.disetujui.toString(), 
+                        icon: <CheckCircle size={22}/>, 
+                        color: '#10b981', 
+                        bg: '#dcfce7' 
+                    },
+                ];
+                
+                // Transform peminjaman ke format jadwal
+                const transformedUpcoming = peminjamanRes.data.data
+                    .filter(p => p.status === 'disetujui_kajur') // Hanya yang sudah disetujui
+                    .slice(0, 5) // Ambil 5 terbaru
+                    .map(p => ({
+                        id: p.id,
+                        room: p.nama_ruangan,
+                        date: formatDate(p.tanggal_pinjam),
+                        time: `${p.jam_mulai} - ${p.jam_selesai}`,
+                        title: p.keperluan,
+                        status: p.status
+                    }));
+                
+                setNotifications(transformedNotifications);
+                setStats(transformedStats);
+                setUpcoming(transformedUpcoming);
+            } catch (err) {
+                console.error('Error fetching data:', err);
+                setError('Gagal memuat data. Silakan refresh halaman.');
+                // Fallback ke dummy data jika ada error
+                setNotifications([
+                    { id: 1, title: 'Gagal memuat', msg: 'Periksa koneksi internet Anda.', time: 'Sekarang', type: 'error' }
+                ]);
+            } finally {
+                setLoading(false);
+            }
+        };
+        
+        fetchData();
+    }, []);
 
-    // 2. Data Statistik
-    const stats = [
-        { title: 'Total Pengajuan', value: '12', icon: <TrendingUp size={22}/>, color: '#0ea5e9', bg: '#e0f2fe' },
-        { title: 'Menunggu', value: '2', icon: <Clock size={22}/>, color: '#f59e0b', bg: '#fef3c7' },
-        { title: 'Disetujui', value: '8', icon: <CheckCircle size={22}/>, color: '#10b981', bg: '#dcfce7' },
-    ];
+    // Helper function format tanggal
+    const formatDate = (dateString) => {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('id-ID', { month: 'short', day: 'numeric' }).toUpperCase();
+    };
 
-    // 3. Data Jadwal
-    const upcoming = [
-        { id: 1, room: 'Gedung H5', date: '25 Nov', time: '08:00 - 10:00', title: 'Kelas Pengganti Sistem Kendali' },
-        { id: 2, room: 'Gedung H20', date: '01 Des', time: '13:00 - 15:00', title: 'Seminar Proposal Skripsi' },
-    ];
+    // Helper function format waktu relatif
+    const formatTime = (dateString) => {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffMs = now - date;
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMs / 3600000);
+        const diffDays = Math.floor(diffMs / 86400000);
+        
+        if (diffMins < 1) return 'Baru saja';
+        if (diffMins < 60) return `${diffMins} menit lalu`;
+        if (diffHours < 24) return `${diffHours} jam lalu`;
+        if (diffDays === 1) return 'Kemarin';
+        if (diffDays < 7) return `${diffDays} hari lalu`;
+        return date.toLocaleDateString('id-ID');
+    };
 
     // Helper Icon Notifikasi
     const getNotifIcon = (type) => {
         if(type === 'success') return <div style={{background:'#dcfce7', padding:8, borderRadius:'50%', color:'#166534'}}><Check size={16}/></div>;
+        if(type === 'error') return <div style={{background:'#fee2e2', padding:8, borderRadius:'50%', color:'#991b1b'}}><X size={16}/></div>;
         if(type === 'warning') return <div style={{background:'#fef9c3', padding:8, borderRadius:'50%', color:'#854d0e'}}><AlertCircle size={16}/></div>;
         return <div style={{background:'#dbeafe', padding:8, borderRadius:'50%', color:'#1e40af'}}><Info size={16}/></div>;
     };
+
+    // Show loading state
+    if (loading) {
+        return (
+            <div className="app-layout">
+                <Sidebar />
+                <div className="content-container">
+                    <div style={{display:'flex', justifyContent:'center', alignItems:'center', height:'100vh', flexDirection:'column', gap:20}}>
+                        <Loader2 size={48} color="#0284c7" style={{animation: 'spin 1s linear infinite'}} />
+                        <p style={{color:'#64748b', fontSize:'1.1rem'}}>Memuat data dashboard...</p>
+                    </div>
+                    <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="app-layout">
             <Sidebar />
             <div className="content-container">
+                {/* Show error message if any */}
+                {error && (
+                    <div style={{
+                        padding:'15px', 
+                        background:'#fee2e2', 
+                        color:'#991b1b', 
+                        borderRadius:8, 
+                        marginBottom:20, 
+                        display:'flex', 
+                        alignItems:'center', 
+                        gap:10
+                    }}>
+                        <AlertCircle size={20}/>
+                        <span>{error}</span>
+                    </div>
+                )}
                 
                 {/* HEADER SECTION */}
                 <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom: 30, position: 'relative'}}>
@@ -138,10 +262,21 @@ const Dashboard = () => {
                                     <div style={{background:'rgba(255,255,255,0.2)', padding:6, borderRadius:'50%'}}><Bell size={20} color="white"/></div>
                                     <span style={{fontSize:'0.85rem', fontWeight:600, letterSpacing:0.5, opacity:0.9}}>UPDATE TERAKHIR</span>
                                 </div>
-                                <h2 style={{margin:'0 0 10px 0', fontSize:'1.6rem'}}>Peminjaman H5 Disetujui</h2>
-                                <p style={{opacity:0.9, marginBottom:20, maxWidth:'80%', lineHeight:1.5}}>
-                                    Permohonan peminjaman ruangan Lab Sistem Kendali untuk tanggal 25 Nov telah disetujui oleh Ketua Jurusan.
-                                </p>
+                                {notifications.length > 0 ? (
+                                    <>
+                                        <h2 style={{margin:'0 0 10px 0', fontSize:'1.6rem'}}>{notifications[0].title}</h2>
+                                        <p style={{opacity:0.9, marginBottom:20, maxWidth:'80%', lineHeight:1.5}}>
+                                            {notifications[0].msg}
+                                        </p>
+                                    </>
+                                ) : (
+                                    <>
+                                        <h2 style={{margin:'0 0 10px 0', fontSize:'1.6rem'}}>Tidak Ada Notifikasi Baru</h2>
+                                        <p style={{opacity:0.9, marginBottom:20, maxWidth:'80%', lineHeight:1.5}}>
+                                            Anda sudah up to date dengan semua pengajuan.
+                                        </p>
+                                    </>
+                                )}
                                 <button onClick={() => navigate('/riwayat')} style={{background:'white', color:'#0284c7', border:'none', padding:'10px 20px', borderRadius:8, fontWeight:700, cursor:'pointer'}}>
                                     Cek Status Pengajuan
                                 </button>
@@ -151,7 +286,7 @@ const Dashboard = () => {
                             </div>
                         </div>
 
-                        {/* 2. JADWAL PEMINJAMan (Timeline) */}
+                        {/* 2. JADWAL PEMINJAMAN (Timeline) */}
                         <div>
                             <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:15}}>
                                 <h3 style={{margin:0, color:'#334155'}}>Jadwal Peminjaman Anda</h3>
@@ -161,41 +296,30 @@ const Dashboard = () => {
                             </div>
 
                             <div className="card" style={{padding:0}}>
-                                {/* Item 1 */}
-                                <div style={{display:'flex', padding: 20, borderBottom:'1px solid #f1f5f9', gap: 20, alignItems:'center'}}>
-                                    <div style={{textAlign:'center', minWidth: 60}}>
-                                        <span style={{display:'block', fontSize:'0.8rem', fontWeight:700, color:'#94a3b8'}}>NOV</span>
-                                        <span style={{display:'block', fontSize:'1.5rem', fontWeight:700, color:'#0284c7'}}>25</span>
-                                    </div>
-                                    <div style={{flex:1}}>
-                                        <div style={{display:'flex', alignItems:'center', gap:10, marginBottom:5}}>
-                                            <span style={{background:'#dcfce7', color:'#166534', fontSize:'0.7rem', fontWeight:700, padding:'2px 8px', borderRadius:4}}>DISETUJUI</span>
-                                            <span style={{fontSize:'0.85rem', color:'#64748b', display:'flex', alignItems:'center', gap:4}}><Clock size={14}/> 08:00 - 10:00</span>
+                                {upcoming.length > 0 ? (
+                                    upcoming.map((item, idx) => (
+                                        <div key={item.id} style={{display:'flex', padding: 20, borderBottom: idx !== upcoming.length - 1 ? '1px solid #f1f5f9' : 'none', gap: 20, alignItems:'center'}}>
+                                            <div style={{textAlign:'center', minWidth: 60}}>
+                                                <span style={{display:'block', fontSize:'0.8rem', fontWeight:700, color:'#94a3b8'}}>{item.date.split(' ')[0]}</span>
+                                                <span style={{display:'block', fontSize:'1.5rem', fontWeight:700, color:'#0284c7'}}>{item.date.split(' ')[1]}</span>
+                                            </div>
+                                            <div style={{flex:1}}>
+                                                <div style={{display:'flex', alignItems:'center', gap:10, marginBottom:5}}>
+                                                    <span style={{background:'#dcfce7', color:'#166534', fontSize:'0.7rem', fontWeight:700, padding:'2px 8px', borderRadius:4}}>DISETUJUI</span>
+                                                    <span style={{fontSize:'0.85rem', color:'#64748b', display:'flex', alignItems:'center', gap:4}}><Clock size={14}/> {item.time}</span>
+                                                </div>
+                                                <h4 style={{margin:0, fontSize:'1.1rem', color:'#0f172a'}}>{item.title}</h4>
+                                                <p style={{margin:'4px 0 0 0', color:'#64748b', fontSize:'0.9rem', display:'flex', alignItems:'center', gap:5}}>
+                                                    <MapPin size={14}/> {item.room}
+                                                </p>
+                                            </div>
                                         </div>
-                                        <h4 style={{margin:0, fontSize:'1.1rem', color:'#0f172a'}}>Kelas Pengganti Sistem Kendali</h4>
-                                        <p style={{margin:'4px 0 0 0', color:'#64748b', fontSize:'0.9rem', display:'flex', alignItems:'center', gap:5}}>
-                                            <MapPin size={14}/> Gedung H5 - Lantai 1
-                                        </p>
+                                    ))
+                                ) : (
+                                    <div style={{padding:20, textAlign:'center', color:'#94a3b8'}}>
+                                        <p>Belum ada jadwal peminjaman yang disetujui.</p>
                                     </div>
-                                </div>
-
-                                {/* Item 2 */}
-                                <div style={{display:'flex', padding: 20, gap: 20, alignItems:'center'}}>
-                                    <div style={{textAlign:'center', minWidth: 60}}>
-                                        <span style={{display:'block', fontSize:'0.8rem', fontWeight:700, color:'#94a3b8'}}>DES</span>
-                                        <span style={{display:'block', fontSize:'1.5rem', fontWeight:700, color:'#0f172a'}}>01</span>
-                                    </div>
-                                    <div style={{flex:1}}>
-                                        <div style={{display:'flex', alignItems:'center', gap:10, marginBottom:5}}>
-                                            <span style={{background:'#fef9c3', color:'#854d0e', fontSize:'0.7rem', fontWeight:700, padding:'2px 8px', borderRadius:4}}>MENUNGGU</span>
-                                            <span style={{fontSize:'0.85rem', color:'#64748b', display:'flex', alignItems:'center', gap:4}}><Clock size={14}/> 13:00 - 15:00</span>
-                                        </div>
-                                        <h4 style={{margin:0, fontSize:'1.1rem', color:'#0f172a'}}>Seminar Proposal Skripsi</h4>
-                                        <p style={{margin:'4px 0 0 0', color:'#64748b', fontSize:'0.9rem', display:'flex', alignItems:'center', gap:5}}>
-                                            <MapPin size={14}/> Gedung H20 - Lantai 2
-                                        </p>
-                                    </div>
-                                </div>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -228,7 +352,19 @@ const Dashboard = () => {
                         {/* WIDGET 2: STATISTIK */}
                         <div className="card" style={{padding: 20}}>
                             <h3 style={{margin:'0 0 15px 0', fontSize:'1rem', color:'#64748b', textTransform:'uppercase', letterSpacing:0.5}}>Statistik Semester Ini</h3>
-                            {/* ... (Statistik content) ... */}
+                            <div style={{display:'flex', flexDirection:'column', gap:12}}>
+                                {stats.map((stat, idx) => (
+                                    <div key={idx} style={{display:'flex', alignItems:'center', gap:12, padding:12, background:stat.bg, borderRadius:8}}>
+                                        <div style={{display:'flex', alignItems:'center', justifyContent:'center', width:45, height:45, background:'white', borderRadius:'50%', color:stat.color}}>
+                                            {stat.icon}
+                                        </div>
+                                        <div style={{flex:1}}>
+                                            <p style={{margin:0, fontSize:'0.85rem', color:'#64748b'}}>{stat.title}</p>
+                                            <p style={{margin:0, fontSize:'1.5rem', fontWeight:700, color:stat.color}}>{stat.value}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
 
                         {/* WIDGET 3: TOMBOL CEPAT */}
