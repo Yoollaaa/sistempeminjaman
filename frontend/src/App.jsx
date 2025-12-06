@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Outlet } from 'react-router-dom';
 
 // --- IMPORT COMPONENT UMUM ---
@@ -28,9 +28,16 @@ import LiveMonitoring from './pages/LiveMonitoring';
 
 // Layout Khusus Mahasiswa (Agar Header hanya muncul di halaman mahasiswa)
 const LayoutMahasiswa = () => {
+  useEffect(() => {
+    document.body.classList.add('hide-header');
+    return () => {
+      document.body.classList.remove('hide-header');
+    };
+  }, []);
+
   return (
     <>
-      <Header />
+      <Header showHeader={false} showBrand={false} showUser={false} showBackground={false} />
       <Outlet />
     </>
   );

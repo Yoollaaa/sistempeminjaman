@@ -241,6 +241,37 @@ class PeminjamanController extends Controller
     }
 
     /**
+     * Tampilkan satu peminjaman berdasarkan ID (Detail)
+     */
+    public function show($id)
+    {
+        $p = Peminjaman::with(['mahasiswa', 'ruangan'])->find($id);
+        if (!$p) {
+            return response()->json(['message' => 'Pengajuan tidak ditemukan.'], 404);
+        }
+
+        $data = [
+            'id' => $p->id,
+            'mahasiswa_id' => $p->mahasiswa_id,
+            'nama_mahasiswa' => $p->mahasiswa->nama ?? '—',
+            'mahasiswa_email' => $p->mahasiswa->email ?? '—',
+            'mahasiswa_nim' => $p->mahasiswa->nim ?? null,
+            'ruangan_id' => $p->ruangan_id,
+            'nama_ruangan' => $p->ruangan->nama_ruangan ?? '—',
+            'tanggal_pinjam' => $p->tanggal_pinjam,
+            'jam_mulai' => $p->jam_mulai,
+            'jam_selesai' => $p->jam_selesai,
+            'keperluan' => $p->keperluan,
+            'status' => $p->status,
+            'catatan_admin' => $p->catatan_admin,
+            'catatan_kajur' => $p->catatan_kajur,
+            'created_at' => $p->created_at,
+        ];
+
+        return response()->json(['message' => 'Detail peminjaman', 'data' => $data], 200);
+    }
+
+    /**
      * Statistik peminjaman untuk mahasiswa yang sedang login
      */
     public function statistics()

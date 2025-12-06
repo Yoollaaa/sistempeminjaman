@@ -47,6 +47,14 @@ body {
   padding: 32px;
 }
 
+.hide-header .content-container {
+  padding-top: 8px; /* reduce top padding when header is hidden */
+}
+
+.hide-header .page-header {
+  margin-top: 6px; /* reduce page header separation a bit */
+}
+
 /* --- SIDEBAR --- */
 .sidebar {
   width: 260px;

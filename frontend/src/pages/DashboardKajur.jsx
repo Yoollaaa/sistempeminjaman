@@ -7,13 +7,14 @@ import {
     Clock, CheckCircle, Filter, User, Calendar, ArrowRight 
 } from 'lucide-react'; 
 import api from '../api';
-import Toast from '../components/Toast'; // FIX: Menghilangkan sintaks ekstra ('' )
+import Toast from '../components/Toast'; // FIX: Menghilangkan sintaks ekstra ('')
 
 const DashboardKajur = () => {
     const navigate = useNavigate();
     const [requests, setRequests] = useState([]);
     const [loading, setLoading] = useState(true);
     const [stats, setStats] = useState({ pending: 0, approved: 0 });
+    const [toast, setToast] = useState({message:'', type:''});
     
     // Ambil data user dari localStorage
     const user = JSON.parse(localStorage.getItem('user')) || { nama: 'Bapak Kajur' };
@@ -36,6 +37,7 @@ const DashboardKajur = () => {
             setStats({ pending: pendingCount, approved: approvedCount });
         } catch (e) {
             console.error('Failed to load peminjaman', e);
+            setToast({ message: e.response?.data?.message || 'Gagal memuat pengajuan. Periksa koneksi.', type: 'error' });
         } finally {
             setLoading(false);
         }
@@ -63,6 +65,11 @@ const DashboardKajur = () => {
                     <div style={{textAlign:'right'}}>
                         <div style={{fontSize:'0.9rem', color:'var(--secondary)'}}>Selamat Datang,</div>
                         <div style={{fontWeight:700, fontSize:'1.1rem'}}>{user.nama}</div>
+                    </div>
+                    <div style={{position:'absolute', right: 24, top: 18}}>
+                        <button className="btn btn-outline" onClick={loadRequests} title="Segarkan">
+                            Perbarui
+                        </button>
                     </div>
                 </div>
 
@@ -142,6 +149,7 @@ const DashboardKajur = () => {
                         </div>
                     )}
                 </div>
+                <Toast message={toast.message} type={toast.type} onClose={() => setToast({message:'', type:''})} />
 
             </div>
         </div>

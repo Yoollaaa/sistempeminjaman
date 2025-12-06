@@ -24,6 +24,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Peminjaman
     Route::get('/peminjaman', [PeminjamanController::class, 'index']); // list pengajuan (admin/kajur)
+    Route::get('/peminjaman/{id}', [PeminjamanController::class, 'show']); // detail peminjaman
     Route::get('/peminjaman/my-peminjaman', [PeminjamanController::class, 'myPeminjaman']); // list pengajuan mahasiswa sendiri
     Route::get('/peminjaman/statistics', [PeminjamanController::class, 'statistics']); // statistik mahasiswa
     Route::get('/peminjaman/notifications', [PeminjamanController::class, 'notifications']); // notifikasi mahasiswa

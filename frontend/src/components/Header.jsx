@@ -4,7 +4,8 @@ import api from '../api';
 import Toast from './Toast';
 import ConfirmModal from './ConfirmModal';
 
-const Header = () => {
+const Header = ({ showHeader = true, showBrand = true, showUser = true, showBackground = true }) => {
+  if (!showHeader) return null;
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(false);
@@ -64,14 +65,25 @@ const Header = () => {
     user = null;
   }
 
+  const headerStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '16px 24px',
+    borderBottom: showBackground ? '1px solid #e2e8f0' : 'none',
+    background: showBackground ? '#ffffff' : 'transparent'
+  };
+
   return (
-    <header style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px', borderBottom: '1px solid #e2e8f0', background: '#ffffff'}}>
+    <header style={headerStyle}>
       <div style={{display: 'flex', alignItems: 'center', gap: 12}}>
-        <Link to="/dashboard" style={{textDecoration: 'none', color: '#0f172a', fontWeight: 700, fontSize: '1.1rem', letterSpacing: '-0.5px'}}>Sistem Peminjaman</Link>
+        {showBrand && (
+          <Link to="/dashboard" style={{textDecoration: 'none', color: '#0f172a', fontWeight: 700, fontSize: '1.1rem', letterSpacing: '-0.5px'}}>Sistem Peminjaman</Link>
+        )}
       </div>
 
       <div style={{display: 'flex', alignItems: 'center', gap: 16}}>
-        {user ? (
+        {user && showUser ? (
           <div style={{display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', background: '#f8fafc', borderRadius: 8}}>
             <div>
               <div style={{color: '#0f172a', fontSize: '0.85rem', fontWeight: 600}}>{user.nama}</div>
@@ -79,7 +91,9 @@ const Header = () => {
             </div>
           </div>
         ) : (
-          <Link to="/" style={{color: 'var(--primary)', fontWeight: 600, fontSize: '0.95rem'}}>Login</Link>
+          !user ? (
+            <Link to="/" style={{color: 'var(--primary)', fontWeight: 600, fontSize: '0.95rem'}}>Login</Link>
+          ) : null
         )}
         {message && (
           <Toast message={message} type={messageType} onClose={() => setMessage('')} />
