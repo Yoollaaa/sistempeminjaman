@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { LogOut } from 'lucide-react';
 import api from '../api';
 import Toast from './Toast';
 import ConfirmModal from './ConfirmModal';
+import { THEME } from '../constants/theme';
 
-const Header = ({ showHeader = true, showBrand = true, showUser = true, showBackground = true }) => {
+const Header = ({ showHeader = true, showBrand = true, showUser = true, showBackground = true, hideLogout = false }) => {
   if (!showHeader) return null;
   const navigate = useNavigate();
 
@@ -69,36 +71,120 @@ const Header = ({ showHeader = true, showBrand = true, showUser = true, showBack
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: '16px 24px',
-    borderBottom: showBackground ? '1px solid #e2e8f0' : 'none',
-    background: showBackground ? '#ffffff' : 'transparent'
+    padding: `${THEME.spacing.md} ${THEME.spacing.xl}`,
+    borderBottom: showBackground ? `1px solid ${THEME.colors.border}` : 'none',
+    background: showBackground ? THEME.colors.white : 'transparent',
+    height: THEME.layout.headerHeight,
+    boxShadow: showBackground ? THEME.shadows.sm : 'none',
+    fontFamily: THEME.typography.fontFamily,
   };
 
   return (
     <header style={headerStyle}>
-      <div style={{display: 'flex', alignItems: 'center', gap: 12}}>
+      <div style={{display: 'flex', alignItems: 'center', gap: THEME.spacing.md}}>
         {showBrand && (
-          <Link to="/dashboard" style={{textDecoration: 'none', color: '#0f172a', fontWeight: 700, fontSize: '1.1rem', letterSpacing: '-0.5px'}}>Sistem Peminjaman</Link>
+          <Link to="/dashboard" style={{
+            textDecoration: 'none',
+            color: THEME.colors.darkText,
+            fontWeight: 700,
+            fontSize: '1.1rem',
+            letterSpacing: '-0.5px',
+            fontFamily: THEME.typography.fontFamily,
+          }}>
+            E-Class
+          </Link>
         )}
       </div>
 
-      <div style={{display: 'flex', alignItems: 'center', gap: 16}}>
+      <div style={{display: 'flex', alignItems: 'center', gap: THEME.spacing.lg}}>
         {user && showUser ? (
-          <div style={{display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', background: '#f8fafc', borderRadius: 8}}>
-            <div>
-              <div style={{color: '#0f172a', fontSize: '0.85rem', fontWeight: 600}}>{user.nama}</div>
-              <div style={{color: '#64748b', fontSize: '0.75rem'}}>{user.role}</div>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: THEME.spacing.md,
+            paddingRight: THEME.spacing.lg,
+            borderRight: `1px solid ${THEME.colors.border}`,
+          }}>
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'flex-end',
+              gap: '2px',
+            }}>
+              <div style={{
+                color: THEME.colors.darkText,
+                fontSize: THEME.typography.bodySmall.fontSize,
+                fontWeight: 600,
+                fontFamily: THEME.typography.fontFamily,
+              }}>
+                {user.nama}
+              </div>
+              <div style={{
+                color: THEME.colors.secondary,
+                fontSize: THEME.typography.bodyXSmall.fontSize,
+                fontFamily: THEME.typography.fontFamily,
+              }}>
+                {user.role}
+              </div>
             </div>
           </div>
         ) : (
           !user ? (
-            <Link to="/" style={{color: 'var(--primary)', fontWeight: 600, fontSize: '0.95rem'}}>Login</Link>
+            <Link to="/" style={{
+              color: THEME.colors.primary,
+              fontWeight: 600,
+              fontSize: THEME.typography.bodySmall.fontSize,
+              fontFamily: THEME.typography.fontFamily,
+            }}>
+              Login
+            </Link>
           ) : null
         )}
+        
+        {!hideLogout && user && (
+          <button
+            onClick={handleLogout}
+            disabled={loading}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: THEME.spacing.sm,
+              padding: `${THEME.spacing.sm} ${THEME.spacing.md}`,
+              backgroundColor: 'transparent',
+              color: THEME.colors.danger,
+              border: `1px solid ${THEME.colors.border}`,
+              borderRadius: THEME.radius.md,
+              cursor: loading ? 'not-allowed' : 'pointer',
+              fontWeight: 600,
+              fontSize: THEME.typography.bodySmall.fontSize,
+              fontFamily: THEME.typography.fontFamily,
+              transition: 'all 0.2s ease',
+              opacity: loading ? 0.6 : 1,
+            }}
+            onMouseEnter={(e) => {
+              if (!loading) {
+                e.target.style.backgroundColor = THEME.colors.dangerLight;
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.backgroundColor = 'transparent';
+            }}
+          >
+            <LogOut size={16} />
+            Keluar
+          </button>
+        )}
+        
         {message && (
           <Toast message={message} type={messageType} onClose={() => setMessage('')} />
         )}
-        <ConfirmModal open={confirmOpen} title="Konfirmasi Logout" message="Apakah Anda yakin ingin keluar?" onCancel={() => setConfirmOpen(false)} onConfirm={doLogout} />
+        <ConfirmModal
+          open={confirmOpen}
+          title="Konfirmasi Logout"
+          message="Apakah Anda yakin ingin keluar dari sistem?"
+          onCancel={() => setConfirmOpen(false)}
+          onConfirm={doLogout}
+        />
       </div>
     </header>
   );

@@ -1,9 +1,11 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Home, BookOpen, PieChart, Activity } from 'lucide-react'; 
+import { Home, BookOpen, PieChart, Activity, LogOut } from 'lucide-react';
+import { THEME } from '../constants/theme';
 
 const SidebarKajur = () => {
     const navigate = useNavigate();
+    const user = JSON.parse(localStorage.getItem('user')) || { nama: 'Kajur', role: 'Ketua Jurusan' };
 
     const handleLogout = () => {
         localStorage.clear();
@@ -16,7 +18,6 @@ const SidebarKajur = () => {
             name: 'Verifikasi Pengajuan', 
             icon: <Home size={20} /> 
         },
-        // 👇 Menu ini sekarang akan muncul dengan benar
         { 
             path: '/kajur/monitoring',   
             name: 'Monitoring Ruangan', 
@@ -30,37 +31,174 @@ const SidebarKajur = () => {
     ];
 
     return (
-        <div className="sidebar">
-            <div className="sidebar-header">
-                <div className="logo-box">
-                    <BookOpen size={24} color="white"/> {/* Tambahkan color="white" biar ikon terlihat jika background biru */}
+        <div style={{
+            width: THEME.layout.sidebarWidth,
+            height: '100vh',
+            background: THEME.colors.white,
+            borderRight: `1px solid ${THEME.colors.border}`,
+            display: 'flex',
+            flexDirection: 'column',
+            padding: THEME.spacing.xl,
+            boxSizing: 'border-box',
+            fontFamily: THEME.typography.fontFamily,
+        }}>
+            {/* HEADER */}
+            <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: THEME.spacing.md,
+                marginBottom: THEME.spacing.xl,
+                paddingBottom: THEME.spacing.xl,
+                borderBottom: `1px solid ${THEME.colors.border}`,
+            }}>
+                <div style={{
+                    background: THEME.colors.primary,
+                    padding: THEME.spacing.md,
+                    borderRadius: THEME.radius.md,
+                    color: THEME.colors.white,
+                }}>
+                    <BookOpen size={24} />
                 </div>
-                <div className="logo-text">
-                    <h2>E-Class</h2>
-                    <p>Teknik Elektro</p>
+                <div>
+                    <h2 style={{
+                        margin: 0,
+                        fontSize: THEME.typography.h4.fontSize,
+                        fontWeight: 800,
+                        color: THEME.colors.darkText,
+                    }}>
+                        E-Class
+                    </h2>
+                    <p style={{
+                        margin: 0,
+                        fontSize: THEME.typography.bodyXSmall.fontSize,
+                        color: THEME.colors.secondary,
+                    }}>
+                        Ketua Jurusan
+                    </p>
                 </div>
             </div>
 
-            <nav className="sidebar-nav">
+            {/* NAVIGATION */}
+            <nav style={{
+                flex: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: THEME.spacing.sm,
+            }}>
                 {navItems.map((item) => (
                     <NavLink
                         key={item.path}
                         to={item.path}
-                        end={item.path === '/dashboard/kajur'} 
-                        className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}
+                        end={item.path === '/dashboard/kajur'}
+                        style={({ isActive }) => ({
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: THEME.spacing.md,
+                            padding: `${THEME.spacing.md} ${THEME.spacing.lg}`,
+                            borderRadius: THEME.radius.lg,
+                            textDecoration: 'none',
+                            fontWeight: 600,
+                            color: isActive ? THEME.colors.primary : THEME.colors.secondary,
+                            backgroundColor: isActive ? THEME.colors.primaryLight : 'transparent',
+                            transition: 'all 0.2s ease',
+                            fontFamily: THEME.typography.fontFamily,
+                        })}
+                        onMouseEnter={(e) => {
+                            const style = window.getComputedStyle(e.currentTarget);
+                            if (style.backgroundColor === 'transparent' || style.backgroundColor === 'rgba(0, 0, 0, 0)') {
+                                e.currentTarget.style.backgroundColor = THEME.colors.bgLight;
+                            }
+                        }}
+                        onMouseLeave={(e) => {
+                            if (!e.currentTarget.getAttribute('data-active')) {
+                                e.currentTarget.style.backgroundColor = 'transparent';
+                            }
+                        }}
                     >
-                        {item.icon} <span>{item.name}</span> {/* Bungkus nama dengan span agar rapi */}
+                        {item.icon}
+                        <span>{item.name}</span>
                     </NavLink>
                 ))}
             </nav>
 
-            <button onClick={handleLogout} className="btn-logout">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                    <polyline points="16 17 21 12 16 7"></polyline>
-                    <line x1="21" y1="12" x2="9" y2="12"></line>
-                </svg>
-                <span>Keluar</span>
+            {/* PROFILE FOOTER */}
+            <div style={{
+                padding: THEME.spacing.lg,
+                borderTop: `1px solid ${THEME.colors.border}`,
+                backgroundColor: THEME.colors.bgLight,
+                borderRadius: THEME.radius.lg,
+                marginBottom: THEME.spacing.lg,
+            }}>
+                <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: THEME.spacing.md,
+                    marginBottom: THEME.spacing.lg,
+                }}>
+                    <div style={{
+                        width: '40px',
+                        height: '40px',
+                        background: THEME.colors.primary,
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontWeight: 'bold',
+                        color: THEME.colors.white,
+                        fontSize: THEME.typography.button.fontSize,
+                    }}>
+                        {user.nama.charAt(0)}
+                    </div>
+                    <div style={{overflow: 'hidden'}}>
+                        <p style={{
+                            margin: 0,
+                            fontSize: THEME.typography.bodySmall.fontSize,
+                            fontWeight: 600,
+                            whiteSpace: 'nowrap',
+                            color: THEME.colors.darkText,
+                        }}>
+                            {user.nama}
+                        </p>
+                        <p style={{
+                            margin: 0,
+                            fontSize: THEME.typography.bodyXSmall.fontSize,
+                            color: THEME.colors.secondary,
+                        }}>
+                            {user.role}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            {/* LOGOUT BUTTON */}
+            <button
+                onClick={handleLogout}
+                style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: THEME.spacing.md,
+                    width: '100%',
+                    padding: `${THEME.spacing.md} ${THEME.spacing.lg}`,
+                    backgroundColor: THEME.colors.danger,
+                    color: THEME.colors.white,
+                    border: 'none',
+                    borderRadius: THEME.radius.md,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    fontSize: THEME.typography.bodySmall.fontSize,
+                    fontFamily: THEME.typography.fontFamily,
+                    transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                    e.target.style.backgroundColor = '#dc2626';
+                }}
+                onMouseLeave={(e) => {
+                    e.target.style.backgroundColor = THEME.colors.danger;
+                }}
+            >
+                <LogOut size={18} />
+                Keluar
             </button>
         </div>
     );

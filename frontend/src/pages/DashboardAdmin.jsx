@@ -1,22 +1,25 @@
 import React, { useEffect, useState } from 'react';
 import SidebarAdmin from '../components/SidebarAdmin';
+import DashboardLayout from '../components/DashboardLayout';
 import { BookOpen, Clock, CheckCircle } from 'lucide-react';
+import { THEME } from '../constants/theme';
 import api from '../api';
 
 const DashboardAdmin = () => {
     const [stats, setStats] = useState({ totalRuangan: 0, pending: 0, active: 0 });
+    const [loading, setLoading] = useState(true);
+    
+    const user = JSON.parse(localStorage.getItem('user')) || { nama: 'Admin' };
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                // Mengambil data ruangan dan peminjaman untuk dihitung statistiknya
                 const reqRuangan = await api.get('/ruangan');
                 const reqPeminjaman = await api.get('/peminjaman');
                 
                 const allPeminjaman = reqPeminjaman.data.data || [];
                 const pending = allPeminjaman.filter(p => p.status === 'diajukan').length;
                 
-                // Menghitung peminjaman yang aktif/disetujui hari ini
                 const today = new Date().toISOString().split('T')[0];
                 const activeToday = allPeminjaman.filter(p => 
                     (p.status === 'disetujui_kajur' || p.status === 'disetujui_admin') && 
@@ -30,54 +33,174 @@ const DashboardAdmin = () => {
                 });
             } catch (e) {
                 console.error("Gagal memuat statistik", e);
+            } finally {
+                setLoading(false);
             }
         };
         fetchData();
     }, []);
 
+    const statCards = [
+        {
+            title: 'Total Ruangan',
+            value: stats.totalRuangan,
+            icon: <BookOpen size={24} />,
+            color: THEME.colors.primary,
+            bgColor: THEME.colors.primaryLight,
+        },
+        {
+            title: 'Menunggu Verifikasi',
+            value: stats.pending,
+            icon: <Clock size={24} />,
+            color: THEME.colors.warning,
+            bgColor: THEME.colors.warningLight,
+        },
+        {
+            title: 'Terpakai Hari Ini',
+            value: stats.active,
+            icon: <CheckCircle size={24} />,
+            color: THEME.colors.success,
+            bgColor: THEME.colors.successLight,
+        },
+    ];
+
     return (
-        <div className="app-layout">
-            <SidebarAdmin />
-            <div className="content-container">
-                <h1 className="page-title">Dashboard Admin</h1>
-                <p className="page-subtitle">Selamat datang di panel kontrol E-Class.</p>
-
-                <div className="stat-grid" style={{marginTop: 30}}>
-                    {/* Kartu 1: Total Ruangan */}
-                    <div className="card stat-card-content">
-                        <div className="stat-icon" style={{background:'#e0f2fe', color:'#0ea5e9'}}>
-                            <BookOpen size={24}/>
+        <DashboardLayout
+            sidebar={<SidebarAdmin />}
+            title="Dashboard Admin"
+            subtitle="Selamat datang di panel kontrol E-Class"
+            userInfo={user}
+            showHeader={true}
+        >
+            <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+                gap: THEME.spacing.xl,
+                marginBottom: THEME.spacing.xxl,
+            }}>
+                {statCards.map((card, idx) => (
+                    <div
+                        key={idx}
+                        style={{
+                            backgroundColor: THEME.colors.white,
+                            border: `1px solid ${THEME.colors.border}`,
+                            borderRadius: THEME.radius.lg,
+                            padding: THEME.spacing.xl,
+                            boxShadow: THEME.shadows.md,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: THEME.spacing.lg,
+                            transition: 'all 0.3s ease',
+                            cursor: 'pointer',
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.transform = 'translateY(-4px)';
+                            e.currentTarget.style.boxShadow = THEME.shadows.lg;
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = 'translateY(0)';
+                            e.currentTarget.style.boxShadow = THEME.shadows.md;
+                        }}
+                    >
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: '60px',
+                            height: '60px',
+                            backgroundColor: card.bgColor,
+                            borderRadius: THEME.radius.md,
+                            color: card.color,
+                        }}>
+                            {card.icon}
                         </div>
                         <div>
-                            <h3 className="stat-value">{stats.totalRuangan}</h3>
-                            <p className="stat-label">Total Ruangan</p>
+                            <h3 style={{
+                                fontSize: THEME.typography.h3.fontSize,
+                                fontWeight: THEME.typography.h3.fontWeight,
+                                margin: 0,
+                                color: THEME.colors.darkText,
+                            }}>
+                                {card.value}
+                            </h3>
+                            <p style={{
+                                fontSize: THEME.typography.bodySmall.fontSize,
+                                color: THEME.colors.secondary,
+                                margin: `${THEME.spacing.sm} 0 0 0`,
+                            }}>
+                                {card.title}
+                            </p>
                         </div>
                     </div>
+                ))}
+            </div>
 
-                    {/* Kartu 2: Menunggu Verifikasi */}
-                    <div className="card stat-card-content">
-                        <div className="stat-icon" style={{background:'#fef3c7', color:'#d97706'}}>
-                            <Clock size={24}/>
-                        </div>
-                        <div>
-                            <h3 className="stat-value">{stats.pending}</h3>
-                            <p className="stat-label">Menunggu Verifikasi</p>
-                        </div>
-                    </div>
-
-                    {/* Kartu 3: Aktif Hari Ini */}
-                    <div className="card stat-card-content">
-                        <div className="stat-icon" style={{background:'#dcfce7', color:'#166534'}}>
-                            <CheckCircle size={24}/>
-                        </div>
-                        <div>
-                            <h3 className="stat-value">{stats.active}</h3>
-                            <p className="stat-label">Terpakai Hari Ini</p>
-                        </div>
-                    </div>
+            {/* Section Tambahan */}
+            <div style={{
+                backgroundColor: THEME.colors.white,
+                border: `1px solid ${THEME.colors.border}`,
+                borderRadius: THEME.radius.lg,
+                padding: THEME.spacing.xl,
+                boxShadow: THEME.shadows.md,
+            }}>
+                <h2 style={{
+                    fontSize: THEME.typography.h3.fontSize,
+                    fontWeight: THEME.typography.h3.fontWeight,
+                    margin: `0 0 ${THEME.spacing.lg} 0`,
+                    color: THEME.colors.darkText,
+                }}>
+                    Akses Cepat
+                </h2>
+                <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                    gap: THEME.spacing.lg,
+                }}>
+                    <button style={{
+                        padding: THEME.spacing.lg,
+                        backgroundColor: THEME.colors.primaryLight,
+                        color: THEME.colors.primary,
+                        border: `1px solid ${THEME.colors.primary}`,
+                        borderRadius: THEME.radius.md,
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        fontFamily: THEME.typography.fontFamily,
+                        transition: 'all 0.2s ease',
+                    }}
+                    onMouseEnter={(e) => {
+                        e.target.style.backgroundColor = THEME.colors.primary;
+                        e.target.style.color = THEME.colors.white;
+                    }}
+                    onMouseLeave={(e) => {
+                        e.target.style.backgroundColor = THEME.colors.primaryLight;
+                        e.target.style.color = THEME.colors.primary;
+                    }}>
+                        Kelola Ruangan
+                    </button>
+                    <button style={{
+                        padding: THEME.spacing.lg,
+                        backgroundColor: THEME.colors.primaryLight,
+                        color: THEME.colors.primary,
+                        border: `1px solid ${THEME.colors.primary}`,
+                        borderRadius: THEME.radius.md,
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        fontFamily: THEME.typography.fontFamily,
+                        transition: 'all 0.2s ease',
+                    }}
+                    onMouseEnter={(e) => {
+                        e.target.style.backgroundColor = THEME.colors.primary;
+                        e.target.style.color = THEME.colors.white;
+                    }}
+                    onMouseLeave={(e) => {
+                        e.target.style.backgroundColor = THEME.colors.primaryLight;
+                        e.target.style.color = THEME.colors.primary;
+                    }}>
+                        Verifikasi Pengajuan
+                    </button>
                 </div>
             </div>
-        </div>
+        </DashboardLayout>
     );
 };
 

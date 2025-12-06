@@ -1,0 +1,10 @@
+// Delete all peminjaman records
+$before = \App\Models\Peminjaman::count();
+\App\Models\Peminjaman::truncate();
+$after = \App\Models\Peminjaman::count();
+
+echo "Deleted " . ($before - $after) . " peminjaman records\n";
+echo "Peminjaman count: $before → $after\n";
+
+$ruangan_count = \App\Models\Ruangan::count();
+echo "Ruangan records preserved: $ruangan_count\n";
