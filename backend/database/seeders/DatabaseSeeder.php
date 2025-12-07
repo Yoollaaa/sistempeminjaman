@@ -3,18 +3,26 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB; // Kita pakai DB Facade biar aman
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 
 class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // 1. BERSIHKAN DATA LAMA (Opsional, biar tidak duplikat)
-        // DB::table('users')->truncate(); 
-        // DB::table('ruangan')->truncate();
+        // 1. NONAKTIFKAN FOREIGN KEY CHECK (Agar bisa truncate tanpa error)
+        Schema::disableForeignKeyConstraints();
 
-        // 2. ISI DATA USER (Manual via Query Builder)
+        // 2. BERSIHKAN DATA LAMA
+        DB::table('users')->truncate(); 
+        DB::table('ruangan')->truncate();
+        DB::table('jadwal_kuliah')->truncate(); 
+        // DB::table('peminjaman')->truncate(); 
+
+        Schema::enableForeignKeyConstraints();
+
+        // 3. ISI DATA USER
         DB::table('users')->insert([
             [
                 'nama' => 'Budi Mahasiswa',
@@ -36,96 +44,97 @@ class DatabaseSeeder extends Seeder
                 'nama' => 'Ketua Jurusan',
                 'email' => 'kajur@test.com',
                 'password' => Hash::make('kajur123'),
-                'role' => 'ketua_jurusan', // Pastikan sesuai enum database
+                'role' => 'ketua_jurusan',
                 'nim' => '2001',
                 'created_at' => now(),
             ]
         ]);
 
-        // 3. ISI DATA RUANGAN
-       DB::table('ruangan')->insert([
+        // 4. ISI DATA RUANGAN (LENGKAP DENGAN KETERANGAN)
+        DB::table('ruangan')->insert([
             [
-                'id' => 1,
+                'ruangan_id' => 1,
                 'nama_ruangan' => 'H5',
                 'kapasitas' => 150,
                 'lokasi' => 'Gedung H Lantai 3',
-                'keterangan' => 'Lab Sistem Kendali',
+                'keterangan' => 'Lab Sistem Kendali', // Sudah terisi
             ],
             [
-                'id' => 2,
+                'ruangan_id' => 2,
                 'nama_ruangan' => 'H20',
                 'kapasitas' => 40,
                 'lokasi' => 'Gedung H Lantai 1',
                 'keterangan' => 'Ruang Kuliah Teori',
             ],
             [
-                'id' => 3,
+                'ruangan_id' => 3,
                 'nama_ruangan' => 'H19',
                 'kapasitas' => 40,
                 'lokasi' => 'Gedung H Lantai 1',
                 'keterangan' => 'Lab Jaringan Komputer',
             ],
             [
-                'id' => 4,
+                'ruangan_id' => 4,
                 'nama_ruangan' => 'H17',
                 'kapasitas' => 40,
                 'lokasi' => 'Gedung H Lantai 1',
-                'keterangan' => null,
+                'keterangan' => 'Ruang Sidang / Seminar', // Diisi
             ],
             [
-                'id' => 5,
+                'ruangan_id' => 5,
                 'nama_ruangan' => 'H18',
                 'kapasitas' => 40,
                 'lokasi' => 'Gedung H Lantai 1',
-                'keterangan' => null,
+                'keterangan' => 'Ruang Kuliah Teori', // Diisi
             ],
             [
-                'id' => 6,
+                'ruangan_id' => 6,
                 'nama_ruangan' => 'Laboratorium Teknik Komputer',
                 'kapasitas' => 30,
                 'lokasi' => 'Laboratorium Teknik Elektro',
-                'keterangan' => null,
+                'keterangan' => 'Praktikum Software & Hardware', // Diisi
             ],
             [
-                'id' => 7,
+                'ruangan_id' => 7,
                 'nama_ruangan' => 'Laboratorium Teknik Digital',
                 'kapasitas' => 30,
                 'lokasi' => 'Laboratorium Teknik Elektro',
-                'keterangan' => null,
+                'keterangan' => 'Praktikum Rangkaian Digital', // Diisi
             ],
             [
-                'id' => 8,
+                'ruangan_id' => 8,
                 'nama_ruangan' => 'Laboratorium Elektronika Kendali',
                 'kapasitas' => 40,
                 'lokasi' => 'Laboratorium Teknik Elektro',
-                'keterangan' => null,
+                'keterangan' => 'Praktikum Elektronika Lanjut', // Diisi
             ],
             [
-                'id' => 9,
+                'ruangan_id' => 9,
                 'nama_ruangan' => 'Laboratorium Kendali',
                 'kapasitas' => 40,
                 'lokasi' => 'Laboratorium Teknik Elektro',
-                'keterangan' => null,
+                'keterangan' => 'Riset Sistem Kendali & Robotika', // Diisi
             ],
             [
-                'id' => 10,
+                'ruangan_id' => 10,
                 'nama_ruangan' => 'Laboratorium TTT',
                 'kapasitas' => 40,
                 'lokasi' => 'Laboratorium Teknik Elektro',
-                'keterangan' => null,
+                'keterangan' => 'Teknik Tegangan Tinggi', // Diisi
             ],
             [
-                'id' => 11,
+                'ruangan_id' => 11,
                 'nama_ruangan' => 'Laboratorium Konversi',
                 'kapasitas' => 40,
                 'lokasi' => 'Laboratorium Teknik Elektro',
-                'keterangan' => null,
+                'keterangan' => 'Mesin Listrik & Konversi Energi', // Diisi
             ]
         ]);
 
-        DB::table('jadwal')->insert([
+        // 5. ISI DATA JADWAL KULIAH
+        DB::table('jadwal_kuliah')->insert([
             [
-                'ruangan_id' => 5, // Mengacu ke H18
+                'ruangan_id' => 5, // H18
                 'hari' => 'Senin',
                 'jam_mulai' => '07:30:00',
                 'jam_selesai' => '09:10:00',
@@ -133,7 +142,7 @@ class DatabaseSeeder extends Seeder
                 'nama_dosen' => 'Dr. Eng. Diah Permata, S.T., M.T.',
             ],
             [
-                'ruangan_id' => 1, // Mengacu ke H5
+                'ruangan_id' => 1, // H5
                 'hari' => 'Selasa',
                 'jam_mulai' => '07:30:00',
                 'jam_selesai' => '09:10:00',
@@ -157,7 +166,7 @@ class DatabaseSeeder extends Seeder
                 'nama_dosen' => 'Mardiana, Dr.Eng.',
             ],
             [
-                'ruangan_id' => 2, // Mengacu ke H20
+                'ruangan_id' => 2, // H20
                 'hari' => 'Jumat',
                 'jam_mulai' => '10:00:00',
                 'jam_selesai' => '11:40:00',
@@ -165,7 +174,7 @@ class DatabaseSeeder extends Seeder
                 'nama_dosen' => 'Yessi Mulyani, M.T.',
             ],
             [
-                'ruangan_id' => 3, // Mengacu ke H19
+                'ruangan_id' => 3, // H19
                 'hari' => 'Senin',
                 'jam_mulai' => '07:30:00',
                 'jam_selesai' => '09:10:00',
@@ -173,7 +182,7 @@ class DatabaseSeeder extends Seeder
                 'nama_dosen' => 'Yessi Mulyani, M.T.',
             ],
             [
-                'ruangan_id' => 7, // Mengacu ke Lab Teknik Digital
+                'ruangan_id' => 7, // Lab Teknik Digital
                 'hari' => 'Senin',
                 'jam_mulai' => '07:30:00',
                 'jam_selesai' => '09:10:00',
@@ -189,7 +198,7 @@ class DatabaseSeeder extends Seeder
                 'nama_dosen' => 'Titin Yulianti, M.Eng',
             ],
             [
-                'ruangan_id' => 6, // Mengacu ke Lab Teknik Komputer
+                'ruangan_id' => 6, // Lab Teknik Komputer
                 'hari' => 'Selasa',
                 'jam_mulai' => '07:30:00',
                 'jam_selesai' => '09:10:00',
@@ -221,7 +230,7 @@ class DatabaseSeeder extends Seeder
                 'nama_dosen' => 'M. Komarudin, M.T',
             ],
             [
-                'ruangan_id' => 4, // Mengacu ke H17
+                'ruangan_id' => 4, // H17
                 'hari' => 'Rabu',
                 'jam_mulai' => '15:30:00',
                 'jam_selesai' => '17:10:00',
@@ -261,7 +270,5 @@ class DatabaseSeeder extends Seeder
                 'nama_dosen' => 'Puput Budi Wintoro, S. Kom, M.T.I',
             ],
         ]);
-        // 4. ISI DATA PEMINJAMAN (sample)
-        $this->call(PeminjamanSeeder::class);
     }
 }

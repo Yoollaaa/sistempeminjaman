@@ -2,77 +2,137 @@ import React, { useState, useEffect } from 'react';
 import { Monitor, Clock, CheckCircle, User } from 'lucide-react';
 import SidebarAdmin from '../components/SidebarAdmin';
 import SidebarKajur from '../components/SidebarKajur';
+import api from '../api'; // Import your API instance
 
 const LiveMonitoring = ({ role }) => {
-    // 1. DATA DUMMY
-    const dummyData = [
-        {
-            id: 1,
-            nama_ruangan: "Gedung D.2.1",
-            gambar: "https://images.unsplash.com/photo-1580582932707-520aed937b7b?auto=format&fit=crop&w=600&q=80",
-            kapasitas: 40,
-            status: "terpakai",
-            detail: {
-                tipe: "KULIAH",
-                judul: "Pemrograman Web Lanjut",
-                pengguna: "Bpk. Dosen Pengampu",
-                selesai: "15:30"
-            }
-        },
-        {
-            id: 2,
-            nama_ruangan: "Gedung D.2.2",
-            gambar: "https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=600&q=80",
-            kapasitas: 40,
-            status: "tersedia",
-            detail: null
-        },
-        {
-            id: 3,
-            nama_ruangan: "Lab RPL",
-            gambar: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=600&q=80",
-            kapasitas: 30,
-            status: "terpakai",
-            detail: {
-                tipe: "BOOKING",
-                judul: "Rapat Persiapan Tech Day",
-                pengguna: "Alya Nayra (HIMAKOM)",
-                selesai: "16:00"
-            }
-        },
-        {
-            id: 4,
-            nama_ruangan: "Lab Jaringan",
-            gambar: "https://images.unsplash.com/photo-1558494949-ef526b004297?auto=format&fit=crop&w=600&q=80",
-            kapasitas: 30,
-            status: "tersedia",
-            detail: null
-        },
-        {
-            id: 5,
-            nama_ruangan: "Aula Gedung H",
-            gambar: "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=600&q=80",
-            kapasitas: 100,
-            status: "terpakai",
-            detail: {
-                tipe: "SEMINAR",
-                judul: "Seminar Proposal Skripsi",
-                pengguna: "Panitia Sempro",
-                selesai: "14:45"
-            }
-        },
-        {
-            id: 6,
-            nama_ruangan: "Gedung D.3.1",
-            gambar: "https://images.unsplash.com/photo-1576267423048-15c0040fec78?auto=format&fit=crop&w=600&q=80",
-            kapasitas: 40,
-            status: "tersedia",
-            detail: null
-        }
-    ];
-
     const [rooms, setRooms] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [currentTime, setCurrentTime] = useState(new Date());
+
+    // 1. Array Placeholder Images (DIPERBARUI: 10 Gambar berbeda)
+    const roomImages = [
+        // Gambar 1: Kelas Standar
+        "https://images.unsplash.com/photo-1580582932707-520aed937b7b?auto=format&fit=crop&w=600&q=80",
+        // Gambar 2: Ruang Seminar Gelap
+        "https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=600&q=80",
+        // Gambar 3: Lab Komputer Modern
+        "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=600&q=80",
+        // Gambar 4: Lab Komputer dengan Server
+        // Gambar 5: Ruang Meeting/Sidang Cerah
+        "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=600&q=80",
+        // Gambar 6: Ruang Diskusi/Co-working
+        "https://images.unsplash.com/photo-1576267423048-15c0040fec78?auto=format&fit=crop&w=600&q=80",
+        // Gambar 7: Ruang Konferensi Besar
+        "https://images.unsplash.com/photo-1560439514-4e9645039924?auto=format&fit=crop&w=600&q=80",
+        // Gambar 8: Area Belajar Kelompok
+        "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=600&q=80",
+        // Gambar 9: Ruang Kuliah Besar (Lecture Hall)
+        "https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=600&q=80",
+        // Gambar 10: Ruang Kelas Minimalis
+        "https://images.unsplash.com/photo-1606761568499-6d2451b23c66?auto=format&fit=crop&w=600&q=80"
+    ];
+
+    // 2. Real-time Clock Effect
+    useEffect(() => {
+        const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+        return () => clearInterval(timer);
+    }, []);
+
+    // 3. Fetch Data & Logic Real-time
+    useEffect(() => {
+        fetchLiveStatus();
+        const intervalId = setInterval(fetchLiveStatus, 60000); // Auto-refresh every 1 minute
+        return () => clearInterval(intervalId);
+    }, []);
+
+    const fetchLiveStatus = async () => {
+        try {
+            // Fetch all necessary data in parallel
+            const [resRuangan, resJadwal, resPeminjaman] = await Promise.all([
+                api.get('/ruangan'),
+                api.get('/jadwal'),
+                api.get('/peminjaman')
+            ]);
+
+            const rawRooms = resRuangan.data.data || [];
+            const schedules = resJadwal.data.data || [];
+            const bookings = resPeminjaman.data.data || [];
+
+            processRoomStatus(rawRooms, schedules, bookings);
+            setLoading(false);
+        } catch (error) {
+            console.error("Error fetching live data:", error);
+            setLoading(false);
+        }
+    };
+
+    const processRoomStatus = (rawRooms, schedules, bookings) => {
+        const now = new Date();
+        const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+        const currentDayName = days[now.getDay()]; 
+        
+        // Date format: YYYY-MM-DD
+        const todayStr = now.toISOString().split('T')[0];
+        
+        // Time format: HH:mm:ss for comparison
+        const timeStr = now.toTimeString().split(' ')[0];
+
+        const processed = rawRooms.map((room, index) => {
+            let status = 'tersedia';
+            let detail = null;
+
+            // A. Check Routine Schedule (Jadwal Kuliah)
+            const activeSchedule = schedules.find(s => 
+                s.ruangan_id === room.ruangan_id && 
+                s.hari === currentDayName &&
+                timeStr >= s.jam_mulai && 
+                timeStr <= s.jam_selesai
+            );
+
+            if (activeSchedule) {
+                status = 'terpakai';
+                detail = {
+                    tipe: "KULIAH",
+                    judul: activeSchedule.mata_kuliah,
+                    pengguna: activeSchedule.nama_dosen || activeSchedule.dosen, // Adjust based on DB column
+                    selesai: activeSchedule.jam_selesai.substring(0, 5)
+                };
+            }
+
+            // B. Check Ad-hoc Booking (Peminjaman) - Only if not occupied by schedule
+            if (!activeSchedule) {
+                const activeBooking = bookings.find(b => 
+                    b.ruangan_id === room.ruangan_id &&
+                    b.tanggal_pinjam === todayStr &&
+                    (b.status === 'disetujui_kajur' || b.status === 'disetujui_admin') && // Only approved bookings
+                    timeStr >= b.jam_mulai && 
+                    timeStr <= b.jam_selesai
+                );
+
+                if (activeBooking) {
+                    status = 'terpakai';
+                    detail = {
+                        tipe: "BOOKING",
+                        judul: activeBooking.keperluan,
+                        pengguna: activeBooking.nama_mahasiswa, 
+                        selesai: activeBooking.jam_selesai.substring(0, 5)
+                    };
+                }
+            }
+
+            return {
+                id: room.ruangan_id,
+                nama_ruangan: room.nama_ruangan,
+                kapasitas: room.kapasitas,
+                // Menggunakan modulo agar gambar berulang jika ruangan lebih dari 10
+                gambar: roomImages[index % roomImages.length], 
+                status: status,
+                detail: detail
+            };
+        });
+
+        setRooms(processed);
+    };
 
     const renderSidebar = () => {
         if (role === 'admin') return <SidebarAdmin />;
@@ -80,33 +140,13 @@ const LiveMonitoring = ({ role }) => {
         return null; 
     };
 
-    useEffect(() => {
-        setLoading(true);
-        setTimeout(() => {
-            setRooms(dummyData);
-            setLoading(false);
-        }, 800);
-    }, []);
-
     return (
-        // WRAPPER UTAMA: height 100vh & overflow hidden agar body tidak scroll
-        <div style={{ 
-            display: 'flex', 
-            height: '100vh', 
-            overflow: 'hidden', 
-            background: '#f8fafc' 
-        }}>
+        <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#f8fafc' }}>
             
-            {/* Sidebar akan diam karena dia berada di luar container scroll (main) */}
             {renderSidebar()}
 
-            {/* MAIN CONTENT: overflow-y: auto agar hanya bagian ini yang scroll */}
-            <main style={{ 
-                flex: 1, 
-                padding: '30px', 
-                overflowY: 'auto', // Ini kuncinya agar scroll
-                height: '100vh'    // Pastikan tingginya full
-            }}>
+            <main style={{ flex: 1, padding: '30px', overflowY: 'auto', height: '100vh' }}>
+                
                 {/* --- HEADER --- */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
                     <div>
@@ -119,15 +159,18 @@ const LiveMonitoring = ({ role }) => {
                         </p>
                     </div>
                     
-                    {/* Legend Status */}
-                    <div style={{ display: 'flex', gap: '15px' }}>
-                        <div style={styles.legendBadge}>
-                            <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#10b981' }}></div>
-                            <span style={{ fontWeight: 600, color: '#334155' }}>Tersedia</span>
-                        </div>
-                        <div style={styles.legendBadge}>
-                            <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#ef4444' }}></div>
-                            <span style={{ fontWeight: 600, color: '#334155' }}>Sedang Dipakai</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+            
+
+                        <div style={{ display: 'flex', gap: '15px' }}>
+                            <div style={styles.legendBadge}>
+                                <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#10b981' }}></div>
+                                <span style={{ fontWeight: 600, color: '#334155' }}>Tersedia</span>
+                            </div>
+                            <div style={styles.legendBadge}>
+                                <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#ef4444' }}></div>
+                                <span style={{ fontWeight: 600, color: '#334155' }}>Sedang Dipakai</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -135,14 +178,14 @@ const LiveMonitoring = ({ role }) => {
                 {/* --- GRID RUANGAN --- */}
                 {loading ? (
                     <div style={{ textAlign: 'center', padding: '50px', color: '#94a3b8' }}>
-                        <p>Memuat data ruangan...</p>
+                        <p>Memuat data monitoring...</p>
                     </div>
                 ) : (
                     <div style={{
                         display: 'grid',
                         gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
                         gap: '24px',
-                        paddingBottom: '40px' // Tambahan padding bawah agar scroll tidak mentok pas di kartu terakhir
+                        paddingBottom: '40px'
                     }}>
                         {rooms.map((room) => {
                             const isBusy = room.status === 'terpakai';
@@ -179,9 +222,7 @@ const LiveMonitoring = ({ role }) => {
                                             src={room.gambar} 
                                             alt={room.nama_ruangan} 
                                             style={{ 
-                                                width: '100%', 
-                                                height: '100%', 
-                                                objectFit: 'cover',
+                                                width: '100%', height: '100%', objectFit: 'cover',
                                                 filter: isBusy ? 'grayscale(20%)' : 'none'
                                             }} 
                                         />
