@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\RuanganController;
 use App\Http\Controllers\PeminjamanController; // Tambahkan import di atas
+use App\Http\Controllers\JadwalController; // Import di atas
 
 // ------------------------------------------------------------------
 // 1. ROUTE PUBLIK (TIDAK PERLU TOKEN)
@@ -14,25 +15,33 @@ Route::post('/login', [AuthController::class, 'login']); // <--- INI PINTU MASUK
 // ------------------------------------------------------------------
 // 2. ROUTE TERPROTEKSI (WAJIB TOKEN AKSES)
 // ------------------------------------------------------------------
+// ...
 Route::middleware('auth:sanctum')->group(function () {
     
     // Auth Logout
     Route::post('/logout', [AuthController::class, 'logout']);
 
-    // Ruangan
-    Route::get('/ruangan', [RuanganController::class, 'index']); 
+    // --- GROUP ROUTE RUANGAN (Lengkap CRUD) ---
+    Route::get('/ruangan', [RuanganController::class, 'index']);           // Baca
+    Route::post('/ruangan', [RuanganController::class, 'store']);          // Tambah
+    Route::put('/ruangan/{id}', [RuanganController::class, 'update']);     // Edit
+    Route::delete('/ruangan/{id}', [RuanganController::class, 'destroy']); // Hapus
 
-    // Peminjaman
-    Route::get('/peminjaman/my-peminjaman', [PeminjamanController::class, 'myPeminjaman']); // list pengajuan mahasiswa sendiri
-    Route::get('/peminjaman/statistics', [PeminjamanController::class, 'statistics']); // statistik mahasiswa
-    Route::get('/peminjaman/notifications', [PeminjamanController::class, 'notifications']); // notifikasi mahasiswa
-    Route::get('/peminjaman', [PeminjamanController::class, 'index']); // list pengajuan (admin/kajur)
-    Route::post('/peminjaman', [PeminjamanController::class, 'store']); // buat pengajuan (mahasiswa)
-    Route::get('/peminjaman/{id}', [PeminjamanController::class, 'show']); // detail peminjaman
-    Route::post('/peminjaman/{id}/approve', [PeminjamanController::class, 'approve']); // approve by admin
-    Route::post('/peminjaman/{id}/reject', [PeminjamanController::class, 'reject']); // reject by admin
-    Route::post('/peminjaman/{id}/approve-kajur', [PeminjamanController::class, 'approveKajur']); // approve by kajur
-    Route::post('/peminjaman/{id}/reject-kajur', [PeminjamanController::class, 'rejectKajur']); // reject by kajur
+    // --- GROUP ROUTE PEMINJAMAN ---
+    Route::get('/peminjaman/my-peminjaman', [PeminjamanController::class, 'myPeminjaman']);
+    Route::get('/peminjaman/statistics', [PeminjamanController::class, 'statistics']);
+    Route::get('/peminjaman/notifications', [PeminjamanController::class, 'notifications']);
 
-    // Nanti ditambahkan: GET /peminjaman/riwayat
+    // --- GROUP ROUTE JADWAL KULIAH ---
+    Route::get('/jadwal', [JadwalController::class, 'index']);
+    Route::post('/jadwal', [JadwalController::class, 'store']);
+    Route::delete('/jadwal/{id}', [JadwalController::class, 'destroy']);
+    
+    Route::get('/peminjaman', [PeminjamanController::class, 'index']);
+    Route::post('/peminjaman', [PeminjamanController::class, 'store']);
+    Route::get('/peminjaman/{id}', [PeminjamanController::class, 'show']);
+    Route::post('/peminjaman/{id}/approve', [PeminjamanController::class, 'approve']);
+    Route::post('/peminjaman/{id}/reject', [PeminjamanController::class, 'reject']);
+    Route::post('/peminjaman/{id}/approve-kajur', [PeminjamanController::class, 'approveKajur']);
+    Route::post('/peminjaman/{id}/reject-kajur', [PeminjamanController::class, 'rejectKajur']);
 });
