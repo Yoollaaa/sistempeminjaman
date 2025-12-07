@@ -205,7 +205,7 @@ const SidebarAdmin = () => {
                     }}
                 >
                     <Activity size={20} />
-                    <span>Live Monitoring</span>
+                    <span>Monitoring Kelas</span>
                 </NavLink>
             </nav>
 

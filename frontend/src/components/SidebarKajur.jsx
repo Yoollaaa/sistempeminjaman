@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Home, BookOpen, PieChart, Activity, LogOut } from 'lucide-react';
+import { Home, BookOpen, PieChart, Monitor, LogOut, ClipboardCheck } from 'lucide-react';
 import { THEME } from '../constants/theme';
 
 const SidebarKajur = () => {
@@ -15,13 +15,18 @@ const SidebarKajur = () => {
     const navItems = [
         { 
             path: '/dashboard/kajur', 
-            name: 'Verifikasi Pengajuan', 
+            name: 'Dashboard', 
             icon: <Home size={20} /> 
         },
         { 
-            path: '/kajur/monitoring',   
+            path: '/kajur/verifikasi', 
+            name: 'Verifikasi Pengajuan', 
+            icon: <ClipboardCheck size={20} /> 
+        },
+        { 
+            path: '/monitoring',   
             name: 'Monitoring Ruangan', 
-            icon: <Activity size={20} /> 
+            icon: <Monitor size={20} /> 
         },
         { 
             path: '/kajur/laporan',   
@@ -41,6 +46,8 @@ const SidebarKajur = () => {
             padding: THEME.spacing.xl,
             boxSizing: 'border-box',
             fontFamily: THEME.typography.fontFamily,
+            position: 'sticky',
+            top: 0
         }}>
             {/* HEADER */}
             <div style={{
@@ -89,7 +96,7 @@ const SidebarKajur = () => {
                     <NavLink
                         key={item.path}
                         to={item.path}
-                        end={item.path === '/dashboard/kajur'}
+                        end={item.path === '/dashboard/kajur'} // Pastikan Dashboard hanya aktif jika url pas
                         style={({ isActive }) => ({
                             display: 'flex',
                             alignItems: 'center',
@@ -147,7 +154,7 @@ const SidebarKajur = () => {
                         color: THEME.colors.white,
                         fontSize: THEME.typography.button.fontSize,
                     }}>
-                        {user.nama.charAt(0)}
+                        {user.nama ? user.nama.charAt(0).toUpperCase() : 'K'}
                     </div>
                     <div style={{overflow: 'hidden'}}>
                         <p style={{
@@ -156,6 +163,8 @@ const SidebarKajur = () => {
                             fontWeight: 600,
                             whiteSpace: 'nowrap',
                             color: THEME.colors.darkText,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis'
                         }}>
                             {user.nama}
                         </p>
