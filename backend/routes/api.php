@@ -23,12 +23,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/ruangan', [RuanganController::class, 'index']); 
 
     // Peminjaman
-    Route::get('/peminjaman', [PeminjamanController::class, 'index']); // list pengajuan (admin/kajur)
-    Route::get('/peminjaman/{id}', [PeminjamanController::class, 'show']); // detail peminjaman
     Route::get('/peminjaman/my-peminjaman', [PeminjamanController::class, 'myPeminjaman']); // list pengajuan mahasiswa sendiri
     Route::get('/peminjaman/statistics', [PeminjamanController::class, 'statistics']); // statistik mahasiswa
     Route::get('/peminjaman/notifications', [PeminjamanController::class, 'notifications']); // notifikasi mahasiswa
+    Route::get('/peminjaman', [PeminjamanController::class, 'index']); // list pengajuan (admin/kajur)
     Route::post('/peminjaman', [PeminjamanController::class, 'store']); // buat pengajuan (mahasiswa)
+    Route::get('/peminjaman/{id}', [PeminjamanController::class, 'show']); // detail peminjaman
     Route::post('/peminjaman/{id}/approve', [PeminjamanController::class, 'approve']); // approve by admin
     Route::post('/peminjaman/{id}/reject', [PeminjamanController::class, 'reject']); // reject by admin
     Route::post('/peminjaman/{id}/approve-kajur', [PeminjamanController::class, 'approveKajur']); // approve by kajur

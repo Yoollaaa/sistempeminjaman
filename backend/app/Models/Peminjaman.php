@@ -18,6 +18,7 @@ class Peminjaman extends Model
         'status',
         'catatan_admin',
         'catatan_kajur',
+        'file_surat',
     ];
 
     protected $casts = [

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom'; // 1. IMPORT NAVIGATE
 import SidebarAdmin from '../components/SidebarAdmin';
 import DashboardLayout from '../components/DashboardLayout';
 import { BookOpen, Clock, CheckCircle } from 'lucide-react';
@@ -6,6 +7,7 @@ import { THEME } from '../constants/theme';
 import api from '../api';
 
 const DashboardAdmin = () => {
+    const navigate = useNavigate(); // 2. INISIALISASI HOOK
     const [stats, setStats] = useState({ totalRuangan: 0, pending: 0, active: 0 });
     const [loading, setLoading] = useState(true);
     
@@ -135,7 +137,7 @@ const DashboardAdmin = () => {
                 ))}
             </div>
 
-            {/* Section Tambahan */}
+            {/* Section Tambahan (Akses Cepat) */}
             <div style={{
                 backgroundColor: THEME.colors.white,
                 border: `1px solid ${THEME.colors.border}`,
@@ -156,46 +158,55 @@ const DashboardAdmin = () => {
                     gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
                     gap: THEME.spacing.lg,
                 }}>
-                    <button style={{
-                        padding: THEME.spacing.lg,
-                        backgroundColor: THEME.colors.primaryLight,
-                        color: THEME.colors.primary,
-                        border: `1px solid ${THEME.colors.primary}`,
-                        borderRadius: THEME.radius.md,
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        fontFamily: THEME.typography.fontFamily,
-                        transition: 'all 0.2s ease',
-                    }}
-                    onMouseEnter={(e) => {
-                        e.target.style.backgroundColor = THEME.colors.primary;
-                        e.target.style.color = THEME.colors.white;
-                    }}
-                    onMouseLeave={(e) => {
-                        e.target.style.backgroundColor = THEME.colors.primaryLight;
-                        e.target.style.color = THEME.colors.primary;
-                    }}>
+                    {/* TOMBOL 1: KELOLA RUANGAN */}
+                    <button 
+                        onClick={() => navigate('/admin/ruangan')} // 3. TAMBAHKAN NAVIGASI KE RUANGAN
+                        style={{
+                            padding: THEME.spacing.lg,
+                            backgroundColor: THEME.colors.primaryLight,
+                            color: THEME.colors.primary,
+                            border: `1px solid ${THEME.colors.primary}`,
+                            borderRadius: THEME.radius.md,
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            fontFamily: THEME.typography.fontFamily,
+                            transition: 'all 0.2s ease',
+                        }}
+                        onMouseEnter={(e) => {
+                            e.target.style.backgroundColor = THEME.colors.primary;
+                            e.target.style.color = THEME.colors.white;
+                        }}
+                        onMouseLeave={(e) => {
+                            e.target.style.backgroundColor = THEME.colors.primaryLight;
+                            e.target.style.color = THEME.colors.primary;
+                        }}
+                    >
                         Kelola Ruangan
                     </button>
-                    <button style={{
-                        padding: THEME.spacing.lg,
-                        backgroundColor: THEME.colors.primaryLight,
-                        color: THEME.colors.primary,
-                        border: `1px solid ${THEME.colors.primary}`,
-                        borderRadius: THEME.radius.md,
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        fontFamily: THEME.typography.fontFamily,
-                        transition: 'all 0.2s ease',
-                    }}
-                    onMouseEnter={(e) => {
-                        e.target.style.backgroundColor = THEME.colors.primary;
-                        e.target.style.color = THEME.colors.white;
-                    }}
-                    onMouseLeave={(e) => {
-                        e.target.style.backgroundColor = THEME.colors.primaryLight;
-                        e.target.style.color = THEME.colors.primary;
-                    }}>
+                    
+                    {/* TOMBOL 2: VERIFIKASI PENGAJUAN */}
+                    <button 
+                        onClick={() => navigate('/admin/verifikasi')} // 4. TAMBAHKAN NAVIGASI KE VERIFIKASI
+                        style={{
+                            padding: THEME.spacing.lg,
+                            backgroundColor: THEME.colors.primaryLight,
+                            color: THEME.colors.primary,
+                            border: `1px solid ${THEME.colors.primary}`,
+                            borderRadius: THEME.radius.md,
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            fontFamily: THEME.typography.fontFamily,
+                            transition: 'all 0.2s ease',
+                        }}
+                        onMouseEnter={(e) => {
+                            e.target.style.backgroundColor = THEME.colors.primary;
+                            e.target.style.color = THEME.colors.white;
+                        }}
+                        onMouseLeave={(e) => {
+                            e.target.style.backgroundColor = THEME.colors.primaryLight;
+                            e.target.style.color = THEME.colors.primary;
+                        }}
+                    >
                         Verifikasi Pengajuan
                     </button>
                 </div>

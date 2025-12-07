@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import api from '../api.js';
 import { 
-    Calendar, Clock, FileText, CheckCircle, XCircle, 
-    Loader2, Download, Filter, ChevronRight, AlertCircle 
+    Calendar, Clock, CheckCircle, XCircle, 
+    Loader2, Download, Filter, AlertCircle 
 } from 'lucide-react';
 
 const Riwayat = () => {
@@ -17,14 +17,15 @@ const Riwayat = () => {
         const fetchData = async () => {
             try {
                 setLoading(true);
+                // Pastikan route ini sudah ada di routes/api.php
                 const response = await api.get('/peminjaman/my-peminjaman');
                 
                 if (response.data && response.data.data) {
-                    // Transform data dari backend ke format yang sesuai dengan UI
+                    // Transform data dari backend ke format UI
                     const transformedData = response.data.data.map((p) => {
-                        // Mapping status ke type (untuk styling)
                         let type, step, statusDisplay;
                         
+                        // Logika Status
                         if (p.status === 'diajukan') {
                             type = 'pending';
                             step = 1;
@@ -47,11 +48,15 @@ const Riwayat = () => {
                             statusDisplay = p.status;
                         }
 
+                        // Format Jam (hapus detik jika ada)
+                        const jamMulai = p.jam_mulai ? p.jam_mulai.substring(0, 5) : '';
+                        const jamSelesai = p.jam_selesai ? p.jam_selesai.substring(0, 5) : '';
+
                         return {
                             id: p.id,
                             ruangan: p.nama_ruangan,
                             tgl: new Date(p.tanggal_pinjam).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' }),
-                            jam: `${p.jam_mulai} - ${p.jam_selesai}`,
+                            jam: `${jamMulai} - ${jamSelesai}`,
                             keperluan: p.keperluan,
                             status: statusDisplay,
                             step: step,
@@ -67,7 +72,7 @@ const Riwayat = () => {
                 setError(null);
             } catch (err) {
                 console.error('Error fetching peminjaman:', err);
-                setError('Gagal mengambil data peminjaman');
+                setError('Gagal mengambil data peminjaman. Pastikan server berjalan.');
             } finally {
                 setLoading(false);
             }
@@ -85,7 +90,7 @@ const Riwayat = () => {
             return true;
         });
 
-    // CONFIG DESIGN (Warna & Icon berdasarkan status)
+    // CONFIG DESIGN
     const getStatusStyle = (type) => {
         switch(type) {
             case 'success': return { border: '#16a34a', bgBadge: '#dcfce7', textBadge: '#166534', icon: <CheckCircle size={16}/> };
@@ -98,7 +103,7 @@ const Riwayat = () => {
     return (
         <div className="app-layout">
             <Sidebar />
-            <div className="content-container">
+            <div className="content-container" style={{background: '#f8fafc', minHeight:'100vh', padding: 30}}>
                 
                 {/* HEADER */}
                 <div style={{marginBottom: 30}}>
@@ -106,7 +111,7 @@ const Riwayat = () => {
                     <p style={{color:'#64748b', margin:0, fontSize: '0.95rem', fontWeight: 500}}>Pantau progres persetujuan peminjaman ruangan Anda secara real-time.</p>
                 </div>
 
-                {/* TAB FILTER MODERN */}
+                {/* TAB FILTER */}
                 <div style={{
                     display:'inline-flex', background:'white', padding: 5, borderRadius: 12, 
                     border:'1px solid #e2e8f0', marginBottom: 30, boxShadow: '0 2px 5px rgba(0,0,0,0.03)'
@@ -136,12 +141,12 @@ const Riwayat = () => {
                         </div>
                     ) : error ? (
                         <div style={{gridColumn: '1 / -1', textAlign:'center', padding: 60, color:'#dc2626'}}>
-                            <AlertCircle size={48} style={{marginBottom:10}} />
+                            <AlertCircle size={48} style={{margin: '0 auto 10px'}} />
                             <p>{error}</p>
                         </div>
                     ) : filteredData.length === 0 ? (
                         <div style={{gridColumn: '1 / -1', textAlign:'center', padding:60, color:'#94a3b8'}}>
-                            <Filter size={48} style={{marginBottom:10, opacity:0.3}}/>
+                            <Filter size={48} style={{margin: '0 auto 10px', opacity:0.3}}/>
                             <p>Tidak ada data pengajuan pada tab ini.</p>
                         </div>
                     ) : (
@@ -150,8 +155,9 @@ const Riwayat = () => {
                             
                             return (
                                 <div key={item.id} className="card" style={{
-                                    position:'relative', overflow:'hidden', 
-                                    transition: 'transform 0.3s, box-shadow 0.3s', cursor:'default'
+                                    position:'relative', overflow:'hidden', background: 'white', borderRadius: 16,
+                                    border: '1px solid #e2e8f0', boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
+                                    transition: 'transform 0.3s, box-shadow 0.3s'
                                 }}
                                 onMouseEnter={(e) => {
                                     e.currentTarget.style.transform = 'translateY(-5px)';
@@ -159,7 +165,7 @@ const Riwayat = () => {
                                 }}
                                 onMouseLeave={(e) => {
                                     e.currentTarget.style.transform = 'translateY(0)';
-                                    e.currentTarget.style.boxShadow = '0 1px 3px 0 rgba(0, 0, 0, 0.1)';
+                                    e.currentTarget.style.boxShadow = '0 2px 5px rgba(0,0,0,0.05)';
                                 }}
                                 >
                                     {/* Indikator Warna Samping */}
@@ -169,7 +175,7 @@ const Riwayat = () => {
                                     <div style={{padding: '20px 20px 15px 26px', borderBottom:'1px dashed #e2e8f0', display:'flex', justifyContent:'space-between', alignItems:'flex-start'}}>
                                         <div>
                                             <h3 style={{margin:0, fontSize:'1.1rem', color:'#0f172a', fontWeight:700}}>{item.ruangan}</h3>
-                                            <div style={{display:'flex', gap:8, fontSize:'0.85rem', color:'#64748b', marginTop:5}}>
+                                            <div style={{display:'flex', gap:12, fontSize:'0.85rem', color:'#64748b', marginTop:5}}>
                                                 <span style={{display:'flex', alignItems:'center', gap:4}}><Calendar size={14}/> {item.tgl}</span>
                                                 <span style={{display:'flex', alignItems:'center', gap:4}}><Clock size={14}/> {item.jam}</span>
                                             </div>
@@ -186,13 +192,13 @@ const Riwayat = () => {
                                     {/* Body Kartu */}
                                     <div style={{padding: '15px 20px 20px 26px'}}>
                                         <p style={{margin:'0 0 15px 0', fontSize:'0.9rem', color:'#334155', lineHeight:1.5}}>
-                                            <span style={{color:'#94a3b8', fontSize:'0.8rem', display:'block', marginBottom:2, fontWeight:600}}>KEPERLUAN:</span>
+                                            <span style={{color:'#94a3b8', fontSize:'0.75rem', display:'block', marginBottom:2, fontWeight:700, textTransform:'uppercase'}}>Keperluan:</span>
                                             {item.keperluan}
                                         </p>
 
-                                        {/* TRACKING STEPPER (Visualisasi Proses) */}
+                                        {/* TRACKING STEPPER */}
                                         {item.type !== 'error' && (
-                                            <div style={{marginTop: 10}}>
+                                            <div style={{marginTop: 15}}>
                                                 <div style={{display:'flex', justifyContent:'space-between', fontSize:'0.75rem', color:'#94a3b8', marginBottom:8, fontWeight:600}}>
                                                     <span style={{color: item.step >= 1 ? style.border : '#cbd5e1'}}>Diajukan</span>
                                                     <span style={{color: item.step >= 2 ? style.border : '#cbd5e1'}}>Verifikasi Admin</span>
@@ -210,17 +216,17 @@ const Riwayat = () => {
 
                                         {/* Alert Jika Ditolak */}
                                         {item.type === 'error' && (
-                                            <div style={{background:'#fef2f2', padding:12, borderRadius:8, border:'1px solid #fecaca', display:'flex', gap:10}}>
+                                            <div style={{background:'#fef2f2', padding:12, borderRadius:8, border:'1px solid #fecaca', display:'flex', gap:10, marginTop:10}}>
                                                 <AlertCircle size={20} color="#dc2626" style={{minWidth:20}}/>
                                                 <div>
                                                     <span style={{fontSize:'0.8rem', fontWeight:700, color:'#991b1b'}}>Alasan Penolakan:</span>
-                                                    <p style={{margin:0, fontSize:'0.85rem', color:'#b91c1c'}}>{item.note || 'Tidak ada catatan'}</p>
+                                                    <p style={{margin:0, fontSize:'0.85rem', color:'#b91c1c'}}>{item.note || 'Tidak ada catatan khusus.'}</p>
                                                 </div>
                                             </div>
                                         )}
                                     </div>
 
-                                    {/* Footer Actions (Hanya jika Sukses) */}
+                                    {/* Footer Actions (Download Surat) */}
                                     {item.type === 'success' && (
                                         <div style={{background:'#f8fafc', padding:'12px 20px', borderTop:'1px solid #e2e8f0', display:'flex', justifyContent:'flex-end'}}>
                                             <button style={{
@@ -240,7 +246,6 @@ const Riwayat = () => {
                         })
                     )}
                 </div>
-
             </div>
         </div>
     );

@@ -159,6 +159,7 @@ class PeminjamanController extends Controller
             'jam_mulai' => 'required|date_format:H:i',
             'jam_selesai' => 'required|date_format:H:i|after:jam_mulai',
             'keperluan' => 'required|string|max:255',
+            'file_surat' => 'nullable|mimes:pdf|max:2048',
         ]);
 
         if ($validator->fails()) {
@@ -181,7 +182,12 @@ class PeminjamanController extends Controller
             ], 409);
         }
         
-        // 3. Simpan Data Peminjaman
+        $filePath = null;
+        if ($request->hasFile('file_surat')) {
+        $filePath = $request->file('file_surat')->store('surat_peminjaman', 'public');
+        }
+
+    // 4. Simpan Data Peminjaman
         $mahasiswaId = Auth::user()->user_id;
 
         $peminjaman = Peminjaman::create([
@@ -192,6 +198,7 @@ class PeminjamanController extends Controller
             'jam_selesai' => $request->jam_selesai,
             'keperluan' => $request->keperluan,
             'status' => 'diajukan',
+            ' file_surat' => $filePath,
         ]);
 
         // 4. Respon Sukses
@@ -210,8 +217,7 @@ class PeminjamanController extends Controller
         
         $query = Peminjaman::with(['mahasiswa', 'ruangan'])
             ->where('mahasiswa_id', $mahasiswaId)
-            ->orderBy('tanggal_pinjam', 'desc')
-            ->orderBy('jam_mulai', 'asc');
+            ->orderBy('created_at', 'desc');
 
         // Filter by status if provided
         if ($request->has('status') && $request->status) {
