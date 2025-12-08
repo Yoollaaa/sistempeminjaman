@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { LogOut } from 'lucide-react';
+import { LogOut, Bell } from 'lucide-react'; // 1. Bell sudah di-import
 import api from '../api';
 import Toast from './Toast';
 import ConfirmModal from './ConfirmModal';
@@ -16,7 +16,6 @@ const Header = ({ showHeader = true, showBrand = true, showUser = true, showBack
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   const handleLogout = async () => {
-    // Open custom confirm modal
     setConfirmOpen(true);
   };
 
@@ -50,15 +49,12 @@ const Header = ({ showHeader = true, showBrand = true, showUser = true, showBack
       setMessage('Anda keluar dari sesi.');
     }
 
-    // Always clear client state
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setLoading(false);
-    // navigate after short delay so user sees toast
     setTimeout(() => navigate('/'), 800);
   };
 
-  // Read user for display (if present)
   let user = null;
   try {
     const raw = localStorage.getItem('user');
@@ -97,6 +93,37 @@ const Header = ({ showHeader = true, showBrand = true, showUser = true, showBack
       </div>
 
       <div style={{display: 'flex', alignItems: 'center', gap: THEME.spacing.lg}}>
+        
+        {/* --- 2. BAGIAN INI YANG SAYA TAMBAHKAN (TOMBOL LONCENG) --- */}
+        {user && (
+            <Link 
+                to="/notifikasi" 
+                title="Lihat Notifikasi"
+                style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '8px',
+                    borderRadius: '50%',
+                    color: THEME.colors.secondary || '#64748b', // Warna abu-abu
+                    textDecoration: 'none',
+                    transition: '0.2s',
+                    cursor: 'pointer'
+                }}
+                onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#f1f5f9';
+                    e.currentTarget.style.color = THEME.colors.primary || '#0ea5e9';
+                }}
+                onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                    e.currentTarget.style.color = THEME.colors.secondary || '#64748b';
+                }}
+            >
+                <Bell size={20} />
+            </Link>
+        )}
+        {/* ---------------------------------------------------------- */}
+
         {user && showUser ? (
           <div style={{
             display: 'flex',

@@ -81,6 +81,34 @@ const Riwayat = () => {
         fetchData();
     }, []);
 
+    // --- FUNGSI BARU: DOWNLOAD SURAT IZIN ---
+    const handleDownload = async (id, ruangan) => {
+        // 1. Tampilkan pesan dulu (Biar user tau tombol bereaksi)
+        alert(`Sedang memproses download surat untuk: ${ruangan}`);
+
+        /* --- JIKA BACKEND SUDAH SIAP, HAPUS TANDA KOMENTAR DI BAWAH INI ---
+           
+        try {
+            // Panggil API download (pastikan responseType: 'blob')
+            const response = await api.get(`/peminjaman/download/${id}`, {
+                responseType: 'blob', 
+            });
+
+            // Buat link download virtual
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `Surat_Izin_${ruangan}_${id}.pdf`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        } catch (err) {
+            console.error("Gagal download:", err);
+            alert("Maaf, gagal mengunduh file surat izin.");
+        }
+        */
+    };
+
     // FILTER DATA
     const filteredData = activeTab === 'Semua' 
         ? historyData 
@@ -229,13 +257,16 @@ const Riwayat = () => {
                                     {/* Footer Actions (Download Surat) */}
                                     {item.type === 'success' && (
                                         <div style={{background:'#f8fafc', padding:'12px 20px', borderTop:'1px solid #e2e8f0', display:'flex', justifyContent:'flex-end'}}>
-                                            <button style={{
-                                                background:'white', border:'1px solid #e2e8f0', color:'#0f172a',
-                                                padding:'8px 16px', borderRadius:8, fontSize:'0.85rem', fontWeight:600,
-                                                display:'flex', alignItems:'center', gap:6, cursor:'pointer', transition:'0.2s'
-                                            }}
-                                            onMouseEnter={(e) => e.target.style.borderColor = '#0284c7'}
-                                            onMouseLeave={(e) => e.target.style.borderColor = '#e2e8f0'}
+                                            <button 
+                                                // --- TOMBOL SUDAH BERFUNGSI DISINI ---
+                                                onClick={() => handleDownload(item.id, item.ruangan)}
+                                                style={{
+                                                    background:'white', border:'1px solid #e2e8f0', color:'#0f172a',
+                                                    padding:'8px 16px', borderRadius:8, fontSize:'0.85rem', fontWeight:600,
+                                                    display:'flex', alignItems:'center', gap:6, cursor:'pointer', transition:'0.2s'
+                                                }}
+                                                onMouseEnter={(e) => e.target.style.borderColor = '#0284c7'}
+                                                onMouseLeave={(e) => e.target.style.borderColor = '#e2e8f0'}
                                             >
                                                 <Download size={16}/> Unduh Surat Izin
                                             </button>

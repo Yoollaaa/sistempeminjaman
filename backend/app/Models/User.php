@@ -6,20 +6,21 @@ use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use App\Models\Peminjaman; 
 
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
-    // KONFIGURASI PENTING UNTUK DB TEMAN ANDA
     protected $table = 'users';
-    protected $primaryKey = 'user_id'; // Kunci utama bukan 'id'
+    protected $primaryKey = 'user_id'; 
     
-    public $timestamps = false; // Matikan total timestamp agar tidak cari 'updated_at'
+    protected $with = ['peminjaman']; 
+    
+    public $timestamps = false; 
 
-    // Daftar kolom yang boleh diisi
     protected $fillable = [
-        'nama',    // PENTING: Pakai 'nama', bukan 'name'
+        'nama', 
         'email',
         'password',
         'role',
@@ -35,5 +36,9 @@ class User extends Authenticatable
         return [
             'password' => 'hashed',
         ];
+    }
+        public function peminjaman()
+    {
+        return $this->hasMany(\App\Models\Peminjaman::class, 'id_mahasiswa', 'user_id'); 
     }
 }

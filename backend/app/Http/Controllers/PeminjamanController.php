@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage; // Digunakan untuk link file surat
 use App\Models\Peminjaman;
 use App\Models\Ruangan;
 use Carbon\Carbon;
@@ -188,7 +189,7 @@ class PeminjamanController extends Controller
         }
 
     // 4. Simpan Data Peminjaman
-        $mahasiswaId = Auth::user()->user_id;
+        $mahasiswaId = Auth::user()->user_id; // Mengambil PK dari tabel Users
 
         $peminjaman = Peminjaman::create([
             'mahasiswa_id' => $mahasiswaId,
@@ -198,7 +199,7 @@ class PeminjamanController extends Controller
             'jam_selesai' => $request->jam_selesai,
             'keperluan' => $request->keperluan,
             'status' => 'diajukan',
-            ' file_surat' => $filePath,
+            'file_surat' => $filePath,
         ]);
 
         // 4. Respon Sukses
@@ -209,14 +210,15 @@ class PeminjamanController extends Controller
     }
 
     /**
-     * List pengajuan peminjaman mahasiswa yang sedang login
+     * List pengajuan peminjaman mahasiswa yang sedang login (Status Pengajuan)
      */
     public function myPeminjaman(Request $request)
     {
-        $mahasiswaId = Auth::user()->user_id;
-        
+        // FIX: Menggunakan kunci relasi yang benar
+        $mahasiswaId = Auth::user()->user_id; 
+
         $query = Peminjaman::with(['mahasiswa', 'ruangan'])
-            ->where('mahasiswa_id', $mahasiswaId)
+            ->where('mahasiswa_id', $mahasiswaId) // MENGGUNAKAN KOLOM 'mahasiswa_id'
             ->orderBy('created_at', 'desc');
 
         // Filter by status if provided
@@ -255,6 +257,13 @@ class PeminjamanController extends Controller
         if (!$p) {
             return response()->json(['message' => 'Pengajuan tidak ditemukan.'], 404);
         }
+        
+        $fileUrl = null;
+        // Penanganan file surat
+        if ($p->file_surat) {
+            // Menggunakan Storage::url() untuk mendapatkan path publik yang benar
+            $fileUrl = Storage::url($p->file_surat);
+        }
 
         $data = [
             'id' => $p->id,
@@ -272,6 +281,11 @@ class PeminjamanController extends Controller
             'catatan_admin' => $p->catatan_admin,
             'catatan_kajur' => $p->catatan_kajur,
             'created_at' => $p->created_at,
+            
+            // --- FIELD BARU UNTUK LINK FILE ---
+            'file_surat_url' => $fileUrl,
+            'file_surat_path' => $p->file_surat, 
+            // ---------------------------------
         ];
 
         return response()->json(['message' => 'Detail peminjaman', 'data' => $data], 200);
@@ -282,17 +296,19 @@ class PeminjamanController extends Controller
      */
     public function statistics()
     {
+        // FIX: Menggunakan ID Mahasiswa yang benar
         $mahasiswaId = Auth::user()->user_id;
         
         $peminjamanQuery = Peminjaman::where('mahasiswa_id', $mahasiswaId);
         
+        // Perbaikan: Menggunakan clone untuk query total
         $stats = [
-            'total' => $peminjamanQuery->count(),
-            'diajukan' => $peminjamanQuery->where('status', 'diajukan')->count(),
-            'disetujui_admin' => $peminjamanQuery->where('status', 'disetujui_admin')->count(),
-            'disetujui_kajur' => $peminjamanQuery->where('status', 'disetujui_kajur')->count(),
-            'ditolak_admin' => $peminjamanQuery->where('status', 'ditolak_admin')->count(),
-            'ditolak_kajur' => $peminjamanQuery->where('status', 'ditolak_kajur')->count(),
+            'total' => (clone $peminjamanQuery)->count(),
+            'diajukan' => (clone $peminjamanQuery)->where('status', 'diajukan')->count(),
+            'disetujui_admin' => (clone $peminjamanQuery)->where('status', 'disetujui_admin')->count(),
+            'disetujui_kajur' => (clone $peminjamanQuery)->where('status', 'disetujui_kajur')->count(),
+            'ditolak_admin' => (clone $peminjamanQuery)->where('status', 'ditolak_admin')->count(),
+            'ditolak_kajur' => (clone $peminjamanQuery)->where('status', 'ditolak_kajur')->count(),
         ];
         
         // Agregasi status
@@ -309,6 +325,7 @@ class PeminjamanController extends Controller
      */
     public function notifications()
     {
+        // FIX: Menggunakan kunci relasi yang benar
         $mahasiswaId = Auth::user()->user_id;
         
         // Ambil 5 pengajuan terbaru dengan status berubah
@@ -327,19 +344,19 @@ class PeminjamanController extends Controller
             if ($p->status === 'disetujui_kajur') {
                 $type = 'success';
                 $title = 'Disetujui';
-                $message = 'Pengajuan peminjaman ' . $p->ruangan->nama_ruangan . ' telah disetujui oleh Ketua Jurusan.';
+                $message = 'Pengajuan peminjaman ' . ($p->ruangan->nama_ruangan ?? '—') . ' telah disetujui oleh Ketua Jurusan.';
             } elseif ($p->status === 'diajukan') {
                 $type = 'info';
                 $title = 'Verifikasi Admin';
-                $message = 'Pengajuan peminjaman ' . $p->ruangan->nama_ruangan . ' sedang diperiksa.';
+                $message = 'Pengajuan peminjaman ' . ($p->ruangan->nama_ruangan ?? '—') . ' sedang diperiksa.';
             } elseif ($p->status === 'disetujui_admin') {
                 $type = 'info';
                 $title = 'Diverifikasi Admin';
-                $message = 'Pengajuan peminjaman ' . $p->ruangan->nama_ruangan . ' telah diverifikasi admin, menunggu persetujuan Kajur.';
+                $message = 'Pengajuan peminjaman ' . ($p->ruangan->nama_ruangan ?? '—') . ' telah diverifikasi admin, menunggu persetujuan Kajur.';
             } elseif ($p->status === 'ditolak_admin' || $p->status === 'ditolak_kajur') {
                 $type = 'error';
                 $title = 'Ditolak';
-                $message = 'Pengajuan peminjaman ' . $p->ruangan->nama_ruangan . ' telah ditolak.';
+                $message = 'Pengajuan peminjaman ' . ($p->ruangan->nama_ruangan ?? '—') . ' telah ditolak.';
             }
             
             return [

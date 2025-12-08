@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
-import { useNavigate } from 'react-router-dom';
-// Imports yang dibutuhkan
-import { Calendar, Clock, MapPin, ChevronRight, AlertCircle, BookOpen, CheckCircle, Info, TrendingUp, PlusCircle, ArrowRight, Loader2 } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom'; // Import Link
+import { 
+    Calendar, Clock, MapPin, ChevronRight, AlertCircle, 
+    Loader2, Bell // Import Bell
+} from 'lucide-react';
 import api from '../api';
 
 const Dashboard = () => {
@@ -11,8 +13,6 @@ const Dashboard = () => {
     const user = JSON.parse(localStorage.getItem('user')) || { nama: 'Mahasiswa', role: 'User' };
     
     // STATE untuk data dari API
-    const [notifications, setNotifications] = useState([]);
-    const [stats, setStats] = useState([]);
     const [upcoming, setUpcoming] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -43,15 +43,10 @@ const Dashboard = () => {
                         status: p.status
                     }));
                 
-                // Reset notifications and stats since we're not using them anymore
-                setNotifications([]);
-                setStats([]);
                 setUpcoming(transformedUpcoming);
             } catch (err) {
                 console.error('Error fetching data:', err);
                 setError('Gagal memuat data. Silakan refresh halaman.');
-                setNotifications([]);
-                setStats([]);
                 setUpcoming([]);
             } finally {
                 setLoading(false);
@@ -65,23 +60,6 @@ const Dashboard = () => {
     const formatDate = (dateString) => {
         const date = new Date(dateString);
         return date.toLocaleDateString('id-ID', { month: 'short', day: 'numeric' }).toUpperCase();
-    };
-
-    // Helper function format waktu relatif
-    const formatTime = (dateString) => {
-        const date = new Date(dateString);
-        const now = new Date();
-        const diffMs = now - date;
-        const diffMins = Math.floor(diffMs / 60000);
-        const diffHours = Math.floor(diffMs / 3600000);
-        const diffDays = Math.floor(diffMs / 86400000);
-        
-        if (diffMins < 1) return 'Baru saja';
-        if (diffMins < 60) return `${diffMins} menit lalu`;
-        if (diffHours < 24) return `${diffHours} jam lalu`;
-        if (diffDays === 1) return 'Kemarin';
-        if (diffDays < 7) return `${diffDays} hari lalu`;
-        return date.toLocaleDateString('id-ID');
     };
 
     // Show loading state
@@ -134,11 +112,46 @@ const Dashboard = () => {
                         </p>
                     </div>
 
-                    {/* Area Kanan: Tanggal & Lonceng Interaktif */}
-                    <div style={{display:'flex', alignItems:'center', gap: 15}}>
+                    {/* Area Kanan: Lonceng & Tanggal */}
+                    <div style={{display:'flex', alignItems:'center', gap: 12}}>
                         
-                        {/* 1. Tanggal */}
-                        <div style={{display:'flex', alignItems:'center', gap:8, color:'#64748b', fontSize:'0.9rem', background:'white', padding:'10px 16px', borderRadius:50, border:'1px solid #e2e8f0'}}>
+                        {/* 1. TOMBOL LONCENG NOTIFIKASI (BARU) */}
+                        <Link to="/notifikasi" style={{
+                            background: 'white',
+                            padding: '10px',
+                            borderRadius: '12px',
+                            boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                            border: '1px solid #e2e8f0',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: '#64748b',
+                            textDecoration: 'none',
+                            transition: '0.2s',
+                            cursor: 'pointer'
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.color = '#0284c7';
+                            e.currentTarget.style.borderColor = '#0284c7';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.color = '#64748b';
+                            e.currentTarget.style.borderColor = '#e2e8f0';
+                        }}
+                        title="Lihat Notifikasi"
+                        >
+                            <Bell size={20} />
+                        </Link>
+
+                        {/* 2. Tanggal */}
+                        <div style={{
+                            display:'flex', alignItems:'center', gap:8, 
+                            color:'#64748b', fontSize:'0.9rem', 
+                            background:'white', padding:'10px 16px', 
+                            borderRadius:'12px', // Samakan radius dengan tombol lonceng
+                            border:'1px solid #e2e8f0',
+                            boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+                        }}>
                             <Calendar size={18} color="#0284c7"/>
                             <span style={{fontWeight:600, color:'#0f172a'}}>{today}</span>
                         </div>
@@ -151,7 +164,7 @@ const Dashboard = () => {
                     {/* KOLOM KIRI (Jadwal & Status) */}
                     <div style={{display:'flex', flexDirection:'column', gap: 24}}>
                         
-                        {/* 1. JADWAL PEMINJAMAN (Timeline) */}
+                        {/* JADWAL PEMINJAMAN (Timeline) */}
                         <div>
                             <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:15}}>
                                 <h3 style={{margin:0, color:'#334155'}}>Jadwal Peminjaman Anda</h3>
@@ -203,20 +216,7 @@ const Dashboard = () => {
                                 + Buat Pengajuan Baru
                             </button>
                         </div>
-                        
-                        {/* WIDGET 2: INFO AKADEMIK */}
-                        <div className="card" style={{padding: 20, background:'#fffbeb', border:'1px solid #fde68a'}}>
-                            <div style={{display:'flex', gap:10}}>
-                                <AlertCircle size={20} color="#d97706" style={{minWidth:20}}/>
-                                <div>
-                                    <h4 style={{margin:'0 0 5px 0', color:'#92400e', fontSize:'0.95rem'}}>Info Pemeliharaan</h4>
-                                    <p style={{margin:0, fontSize:'0.85rem', color:'#b45309', lineHeight:1.4}}>
-                                        Gedung H19 akan mengalami pemadaman listrik pada Sabtu, 30 Nov.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
+                    
                     </div>
                 </div>
 

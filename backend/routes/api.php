@@ -1,47 +1,45 @@
 <?php
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+
+use App\Models\Peminjaman; 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\RuanganController;
-use App\Http\Controllers\PeminjamanController; // Tambahkan import di atas
-use App\Http\Controllers\JadwalController; // Import di atas
+use App\Http\Controllers\PeminjamanController;
+use App\Http\Controllers\JadwalController;
 
-// ------------------------------------------------------------------
-// 1. ROUTE PUBLIK (TIDAK PERLU TOKEN)
-// ------------------------------------------------------------------
 Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']); // <--- INI PINTU MASUK LOGIN YANG DICARI REACT
+Route::post('/login', [AuthController::class, 'login']);
 
-// ------------------------------------------------------------------
-// 2. ROUTE TERPROTEKSI (WAJIB TOKEN AKSES)
-// ------------------------------------------------------------------
-// ...
+
 Route::middleware('auth:sanctum')->group(function () {
-    
-    // Auth Logout
+
     Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/user', function (Request $request) {
+        return $request->user();
+    });
 
-    // --- GROUP ROUTE RUANGAN (Lengkap CRUD) ---
-    Route::get('/ruangan', [RuanganController::class, 'index']);           // Baca
-    Route::post('/ruangan', [RuanganController::class, 'store']);          // Tambah
-    Route::put('/ruangan/{id}', [RuanganController::class, 'update']);     // Edit
-    Route::delete('/ruangan/{id}', [RuanganController::class, 'destroy']); // Hapus
+    Route::get('/ruangan', [RuanganController::class, 'index']);
+    Route::post('/ruangan', [RuanganController::class, 'store']);
+    Route::put('/ruangan/{id}', [RuanganController::class, 'update']);
+    Route::delete('/ruangan/{id}', [RuanganController::class, 'destroy']);
 
-    // --- GROUP ROUTE PEMINJAMAN ---
-    Route::get('/peminjaman/my-peminjaman', [PeminjamanController::class, 'myPeminjaman']);
-    Route::get('/peminjaman/statistics', [PeminjamanController::class, 'statistics']);
-    Route::get('/peminjaman/notifications', [PeminjamanController::class, 'notifications']);
-
-    // --- GROUP ROUTE JADWAL KULIAH ---
     Route::get('/jadwal', [JadwalController::class, 'index']);
     Route::post('/jadwal', [JadwalController::class, 'store']);
     Route::delete('/jadwal/{id}', [JadwalController::class, 'destroy']);
-    
+
     Route::get('/peminjaman', [PeminjamanController::class, 'index']);
     Route::post('/peminjaman', [PeminjamanController::class, 'store']);
     Route::get('/peminjaman/{id}', [PeminjamanController::class, 'show']);
+    
+    Route::get('/peminjaman/my-peminjaman', [PeminjamanController::class, 'myPeminjaman']);
+    Route::get('/peminjaman/statistics', [PeminjamanController::class, 'statistics']);
+    
     Route::post('/peminjaman/{id}/approve', [PeminjamanController::class, 'approve']);
     Route::post('/peminjaman/{id}/reject', [PeminjamanController::class, 'reject']);
     Route::post('/peminjaman/{id}/approve-kajur', [PeminjamanController::class, 'approveKajur']);
     Route::post('/peminjaman/{id}/reject-kajur', [PeminjamanController::class, 'rejectKajur']);
-});
+
+    Route::get('/notifikasi', [PeminjamanController::class, 'notifications']);
+}); 

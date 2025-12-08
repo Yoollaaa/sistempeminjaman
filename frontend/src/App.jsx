@@ -6,6 +6,7 @@ import Login from './pages/Login';
 import Register from './pages/Register'; 
 import RequireRole from './components/RequireRole';
 import Header from './components/Header'; // Header khusus Mahasiswa/Umum
+import Notifikasi from './pages/Notifikasi';
 
 // --- IMPORT HALAMAN MAHASISWA ---
 import Dashboard from './pages/Dashboard';
@@ -57,6 +58,7 @@ function App() {
             <Route path="/pilih-ruangan" element={<PilihRuangan />} />
             <Route path="/ajukan" element={<FormPeminjaman />} />
             <Route path="/riwayat" element={<Riwayat />} />
+            <Route path="/notifikasi" element={<Notifikasi />} />  {/* <-- TAMBAH INI */}
         </Route>
 
         {/* --- GROUP RUTE ADMIN (Pakai SidebarAdmin di dalam halamannya) --- */}
