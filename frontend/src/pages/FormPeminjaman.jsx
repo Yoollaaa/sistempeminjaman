@@ -10,19 +10,15 @@ const FormPeminjaman = () => {
     const fileInputRef = useRef(null);
     
     // --- 1. AMBIL DATA DARI NAVIGASI ---
-    // Menggunakan optional chaining (?.)
     const ruanganData = location.state?.ruangan; 
     const tanggalDefault = location.state?.tanggal || new Date().toISOString().split('T')[0];
 
     // --- 2. CEK APAKAH DATA RUANGAN ADA ---
-    // Jika user masuk lewat Sidebar, ruanganData akan undefined
     const isInvalidAccess = !ruanganData || !ruanganData.ruangan_id;
 
-    // Redirect otomatis jika data tidak valid (Opsional, tapi disarankan)
     useEffect(() => {
         if (isInvalidAccess) {
-            // Kita beri delay sedikit agar user sadar ada yang salah, atau biarkan tampil pesan error di UI
-            // navigate('/dashboard'); 
+            // Logika opsional redirect jika akses tidak valid
         }
     }, [isInvalidAccess, navigate]);
 
@@ -101,11 +97,12 @@ const FormPeminjaman = () => {
             formData.append('keperluan', formState.keperluan);
             
             if (selectedFile) {
+                // *** PENTING: File dikirim ke backend dengan nama field 'file_surat' ***
                 formData.append('file_surat', selectedFile); 
             }
 
             const response = await api.post('/peminjaman', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
+                headers: { 'Content-Type': 'multipart/form-data' } // PENTING untuk upload file
             });
 
             alert("Berhasil! " + response.data.message);

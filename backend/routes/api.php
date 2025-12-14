@@ -28,13 +28,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/jadwal', [JadwalController::class, 'index']);
     Route::post('/jadwal', [JadwalController::class, 'store']);
     Route::delete('/jadwal/{id}', [JadwalController::class, 'destroy']);
-
+    
     Route::get('/peminjaman', [PeminjamanController::class, 'index']);
     Route::post('/peminjaman', [PeminjamanController::class, 'store']);
-    Route::get('/peminjaman/{id}', [PeminjamanController::class, 'show']);
     
     Route::get('/peminjaman/my-peminjaman', [PeminjamanController::class, 'myPeminjaman']);
     Route::get('/peminjaman/statistics', [PeminjamanController::class, 'statistics']);
+    
+    Route::get('/peminjaman/{id}', [PeminjamanController::class, 'show']);
     
     Route::post('/peminjaman/{id}/approve', [PeminjamanController::class, 'approve']);
     Route::post('/peminjaman/{id}/reject', [PeminjamanController::class, 'reject']);
@@ -42,4 +43,4 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/peminjaman/{id}/reject-kajur', [PeminjamanController::class, 'rejectKajur']);
 
     Route::get('/notifikasi', [PeminjamanController::class, 'notifications']);
-}); 
+});

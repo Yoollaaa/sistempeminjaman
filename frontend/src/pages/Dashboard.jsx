@@ -3,7 +3,7 @@ import Sidebar from '../components/Sidebar';
 import { useNavigate, Link } from 'react-router-dom'; // Import Link
 import { 
     Calendar, Clock, MapPin, ChevronRight, AlertCircle, 
-    Loader2, Bell // Import Bell
+    Loader2, Bell, TrendingUp // Add TrendingUp
 } from 'lucide-react';
 import api from '../api';
 
@@ -14,6 +14,7 @@ const Dashboard = () => {
     
     // STATE untuk data dari API
     const [upcoming, setUpcoming] = useState([]);
+    const [stats, setStats] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
@@ -29,6 +30,33 @@ const Dashboard = () => {
                 // Fetch peminjaman sebagai data utama
                 const peminjamanRes = await api.get('/peminjaman');
                 const peminjamanData = peminjamanRes.data?.data || [];
+                
+                // Hitung statistik dari data
+                const total = peminjamanData.length;
+                const menunggu = peminjamanData.filter(p => p.status === 'diajukan' || p.status === 'disetujui_admin').length;
+                const disetujui = peminjamanData.filter(p => p.status === 'disetujui_kajur').length;
+                
+                // Set stats untuk widget statistik
+                setStats([
+                    { 
+                        title: 'Total Pengajuan', 
+                        value: total.toString(), 
+                        color: '#0ea5e9', 
+                        bg: '#e0f2fe' 
+                    },
+                    { 
+                        title: 'Menunggu', 
+                        value: menunggu.toString(), 
+                        color: '#f59e0b', 
+                        bg: '#fef3c7' 
+                    },
+                    { 
+                        title: 'Disetujui', 
+                        value: disetujui.toString(), 
+                        color: '#10b981', 
+                        bg: '#dcfce7' 
+                    },
+                ]);
                 
                 // Transform peminjaman ke format jadwal (hanya yang sudah disetujui)
                 const transformedUpcoming = peminjamanData
@@ -48,6 +76,7 @@ const Dashboard = () => {
                 console.error('Error fetching data:', err);
                 setError('Gagal memuat data. Silakan refresh halaman.');
                 setUpcoming([]);
+                setStats([]);
             } finally {
                 setLoading(false);
             }
@@ -58,8 +87,15 @@ const Dashboard = () => {
 
     // Helper function format tanggal
     const formatDate = (dateString) => {
+        if (!dateString) return '-';
         const date = new Date(dateString);
         return date.toLocaleDateString('id-ID', { month: 'short', day: 'numeric' }).toUpperCase();
+    };
+
+    // Get latest notification / update
+    const getLatestUpdate = () => {
+        if (upcoming.length === 0) return null;
+        return upcoming[0];
     };
 
     // Show loading state
@@ -158,6 +194,24 @@ const Dashboard = () => {
                     </div>
                 </div>
 
+                {/* HERO CARD: UPDATE TERAKHIR */}
+                {upcoming.length > 0 && (
+                    <div style={{padding: 24, background: 'linear-gradient(to right, #0284c7, #0ea5e9)', color:'white', border:'none', position:'relative', overflow:'hidden', borderRadius: 12, marginBottom: 20, marginTop: 20}}>                        <div style={{position:'relative', zIndex:2}}>
+                            <div style={{display:'flex', alignItems:'center', gap:10, marginBottom:15}}>
+                                <div style={{background:'rgba(255,255,255,0.2)', padding:6, borderRadius:'50%'}}><Bell size={20} color="white"/></div>
+                                <span style={{fontSize:'0.85rem', fontWeight:600, letterSpacing:0.5, opacity:0.9}}>UPDATE TERAKHIR</span>
+                            </div>
+                            <h2 style={{margin:'0 0 10px 0', fontSize:'1.6rem'}}>Pengajuan {getLatestUpdate()?.room}</h2>
+                            <p style={{opacity:0.9, marginBottom:20, maxWidth:'80%', lineHeight:1.5}}>
+                                {getLatestUpdate()?.title}
+                            </p>
+                            <button onClick={() => navigate('/riwayat')} style={{background:'white', color:'#0284c7', border:'none', padding:'10px 20px', borderRadius:8, fontWeight:700, cursor:'pointer'}}>
+                                Cek Status Pengajuan
+                            </button>
+                        </div>
+                    </div>
+                )}
+
                 {/* MAIN DASHBOARD CONTENT */}
                 <div style={{display: 'grid', gridTemplateColumns: '2.5fr 1fr', gap: 30}}>
                     
@@ -205,7 +259,27 @@ const Dashboard = () => {
                     {/* KOLOM KANAN (WIDGETS) */}
                     <div style={{display:'flex', flexDirection:'column', gap: 24}}>
                         
-                        {/* WIDGET 1: TOMBOL CEPAT */}
+                        {/* WIDGET 1: STATISTIK */}
+                        {stats.length > 0 && (
+                            <div className="card" style={{padding: 20}}>
+                                <h3 style={{margin:'0 0 15px 0', fontSize:'1rem', color:'#64748b', textTransform:'uppercase', letterSpacing:0.5}}>Statistik Semester Ini</h3>
+                                <div style={{display:'flex', flexDirection:'column', gap:12}}>
+                                    {stats.map((stat, idx) => (
+                                        <div key={idx} style={{display:'flex', alignItems:'center', gap:12, padding:12, background:stat.bg, borderRadius:8}}>
+                                            <div style={{display:'flex', alignItems:'center', justifyContent:'center', width:45, height:45, background:'white', borderRadius:'50%', color:stat.color}}>
+                                                <TrendingUp size={20}/>
+                                            </div>
+                                            <div style={{flex:1}}>
+                                                <p style={{margin:0, fontSize:'0.85rem', color:'#64748b'}}>{stat.title}</p>
+                                                <p style={{margin:0, fontSize:'1.5rem', fontWeight:700, color:stat.color}}>{stat.value}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                        
+                        {/* WIDGET 2: TOMBOL CEPAT */}
                         <div className="card" style={{padding: 24, textAlign:'center', border:'1px dashed #cbd5e1', background:'transparent'}}>
                             <h4 style={{margin:'0 0 10px 0', color:'#0f172a'}}>Ingin Pinjam Ruangan?</h4>
                             <p style={{fontSize:'0.9rem', color:'#64748b', marginBottom:20}}>Cek ketersediaan ruangan di Gedung H secara real-time.</p>

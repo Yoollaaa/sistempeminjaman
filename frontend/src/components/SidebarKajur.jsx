@@ -24,7 +24,7 @@ const SidebarKajur = () => {
             icon: <ClipboardCheck size={20} /> 
         },
         { 
-            path: '/monitoring',   
+            path: '/kajur/monitoring',   
             name: 'Monitoring Ruangan', 
             icon: <Monitor size={20} /> 
         },

@@ -2,29 +2,26 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Peminjaman extends Model
 {
-    protected $table = 'peminjaman';
-    protected $primaryKey = 'id';
-    protected $fillable = [
-        'mahasiswa_id',
-        'ruangan_id',
-        'tanggal_pinjam',
-        'jam_mulai',
-        'jam_selesai',
-        'keperluan',
-        'status',
-        'catatan_admin',
-        'catatan_kajur',
-        'file_surat',
-    ];
+    use HasFactory;
 
-    protected $casts = [
-        'tanggal_pinjam' => 'date',
-        'jam_mulai' => 'datetime:H:i',
-        'jam_selesai' => 'datetime:H:i',
+    protected $table = 'peminjaman'; 
+
+    protected $fillable = [
+        'mahasiswa_id', 
+        'ruangan_id', 
+        'tanggal_pinjam', 
+        'jam_mulai', 
+        'jam_selesai', 
+        'keperluan', 
+        'status', 
+        'catatan_admin', 
+        'catatan_kajur',
+        'file_surat', 
     ];
 
     public function mahasiswa()

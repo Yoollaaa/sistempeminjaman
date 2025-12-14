@@ -6,18 +6,15 @@ use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use App\Models\Peminjaman; 
 
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
     protected $table = 'users';
-    protected $primaryKey = 'user_id'; 
-    
-    protected $with = ['peminjaman']; 
-    
-    public $timestamps = false; 
+    protected $primaryKey = 'user_id';
+    public $incrementing = true;
+    protected $keyType = 'int'; 
 
     protected $fillable = [
         'nama', 
@@ -37,8 +34,8 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
-        public function peminjaman()
+    public function peminjaman()
     {
-        return $this->hasMany(\App\Models\Peminjaman::class, 'id_mahasiswa', 'user_id'); 
+        return $this->hasMany(\App\Models\Peminjaman::class, 'mahasiswa_id', 'user_id');
     }
 }

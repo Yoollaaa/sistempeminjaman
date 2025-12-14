@@ -20,12 +20,13 @@ import DashboardAdmin from './pages/DashboardAdmin';
 import KelolaRuangan from './pages/KelolaRuangan';
 import KelolaJadwal from './pages/KelolaJadwal';
 import VerifikasiPeminjaman from './pages/VerifikasiPeminjaman';
+import LiveMonitoring from './pages/LiveMonitoring';
 
 // --- IMPORT HALAMAN KAJUR ---
 import DashboardKajur from './pages/DashboardKajur';
+import VerifikasiPengajuanKajur from './pages/VerifikasiPengajuanKajur';
 import DetailPengajuan from './pages/DetailPengajuan';
 import LaporanKajur from './pages/LaporanKajur';
-import LiveMonitoring from './pages/LiveMonitoring';
 
 // Layout Khusus Mahasiswa (Agar Header hanya muncul di halaman mahasiswa)
 const LayoutMahasiswa = () => {
@@ -96,21 +97,33 @@ function App() {
           </RequireRole>
         } />
         
-        {/* 2. Detail Pengajuan */}
+        {/* 2. Verifikasi Pengajuan Kajur */}
+        <Route path="/kajur/verifikasi" element={
+          <RequireRole allowed={["ketua_jurusan"]}>
+            <VerifikasiPengajuanKajur />
+          </RequireRole>
+        } />
+
+        {/* 3. Monitoring Ruangan */}
+        <Route path="/kajur/monitoring" element={
+          <RequireRole allowed={["ketua_jurusan"]}>
+            <LiveMonitoring role="kajur" />
+          </RequireRole>
+        } />
+        
+        {/* 4. Detail Pengajuan */}
         <Route path="/kajur/detail/:id" element={
           <RequireRole allowed={["ketua_jurusan"]}>
             <DetailPengajuan />
           </RequireRole>
         } />
 
-        {/* 3. Laporan Rekapitulasi */}
+        {/* 5. Laporan Rekapitulasi */}
         <Route path="/kajur/laporan" element={
           <RequireRole allowed={["ketua_jurusan"]}>
             <LaporanKajur />
           </RequireRole>
         } />
-        {/* Route untuk Kajur */}
-<Route path="/kajur/monitoring" element={<LiveMonitoring role="kajur" />} />
 
       </Routes>
     </Router>

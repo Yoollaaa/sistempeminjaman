@@ -171,7 +171,7 @@ const VerifikasiPeminjaman = () => {
                                             
                                             {item.file_surat ? (
                                                 <a 
-                                                    href={getFileUrl(item.file_surat)} 
+                                                    href={item.file_surat_url || getFileUrl(item.file_surat)} 
                                                     target="_blank" 
                                                     rel="noopener noreferrer"
                                                     className="btn"
